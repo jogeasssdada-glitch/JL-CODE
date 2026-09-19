@@ -226,9 +226,9 @@ body {
       Inicia sesión con Discord para acceder a tus compras, descargar recursos y gestionar licencias.
     </p>
 
-    <!-- Botón Continuar con Discord -->
-    <button onclick="redirectToYourDiscordOAuth()" class="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-4 px-6 rounded-2xl flex items-center justify-center gap-3 transition-all text-sm shadow-lg shadow-[#5865F2]/25 cursor-pointer uppercase tracking-wider mb-4 group">
-      <i class="fab fa-discord text-xl"></i>
+    <!-- Botón Continuar con Discord Oficial -->
+    <button onclick="redirectToYourDiscordOAuth()" class="w-full bg-[#5865F2] hover:bg-[#4752C4] active:scale-[0.98] text-white font-extrabold py-4 px-6 rounded-2xl flex items-center justify-center gap-3.5 transition-all text-sm shadow-[0_6px_25px_rgba(88,101,242,0.45)] hover:shadow-[0_8px_30px_rgba(88,101,242,0.6)] cursor-pointer uppercase tracking-wider mb-4 group">
+      <i class="fab fa-discord text-2xl group-hover:scale-110 transition-transform"></i>
       <span>Continuar con Discord</span>
     </button>
 
@@ -263,8 +263,8 @@ body {
 
     <!-- Indicador de cuenta activa (como en screenshot) -->
     <div class="flex items-center justify-center gap-1.5 text-xs text-gray-400 mb-5">
-      <span>Sesión iniciada como <strong id="auth-active-username" class="text-white">Cliente</strong></span>
-      <button onclick="promptChangeDiscordUser()" class="text-[#5865F2] hover:underline font-semibold cursor-pointer ml-1">¿No eres tú?</button>
+      <span>Sesión iniciada como <strong id="auth-active-username" class="text-white">chinito_jl</strong></span>
+      <button onclick="redirectToYourDiscordOAuth()" class="text-[#5865F2] hover:underline font-semibold cursor-pointer ml-1">¿No eres tú?</button>
     </div>
 
     <!-- Lista completa de permisos (idéntica a la imagen) -->
@@ -298,15 +298,13 @@ body {
       </div>
     </div>
 
-    <!-- Botones Cancelar y Autorizar -->
-    <div class="flex flex-col gap-2.5">
-      <button onclick="confirmDiscordAuthorization()" class="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-3.5 px-6 rounded-xl text-xs transition-all shadow-lg shadow-[#5865F2]/30 cursor-pointer uppercase tracking-wider">
-        Autorizar
+    <!-- Botón Único Oficial de Discord -->
+    <div class="flex flex-col gap-3">
+      <button onclick="redirectToYourDiscordOAuth()" class="w-full bg-[#5865F2] hover:bg-[#4752C4] active:scale-[0.98] text-white font-extrabold py-4 px-6 rounded-2xl text-sm transition-all duration-200 shadow-[0_4px_20px_rgba(88,101,242,0.45)] hover:shadow-[0_6px_25px_rgba(88,101,242,0.6)] cursor-pointer flex items-center justify-center gap-3 tracking-wide">
+        <i class="fab fa-discord text-2xl"></i>
+        <span>Autorizar con Discord</span>
       </button>
-      <button onclick="redirectToYourDiscordOAuth()" class="w-full bg-[#2b2d35] hover:bg-[#353742] text-[#5865F2] hover:text-white font-bold py-2.5 px-6 rounded-xl text-[11px] transition-all flex items-center justify-center gap-2 cursor-pointer">
-        <i class="fab fa-discord"></i> Autorizar con Discord Oficial
-      </button>
-      <button onclick="cancelDiscordAuthStep()" class="w-full bg-transparent hover:bg-[#2b2d35]/40 text-gray-400 hover:text-white font-semibold py-2 px-6 rounded-xl text-xs transition-all cursor-pointer">
+      <button onclick="cancelDiscordAuthStep()" class="w-full bg-transparent hover:bg-white/5 text-gray-400 hover:text-white font-medium py-2.5 px-6 rounded-xl text-xs transition-colors cursor-pointer">
         Cancelar
       </button>
     </div>
@@ -511,9 +509,10 @@ body {
         <span id="cart-count" class="cart-badge hidden">0</span>
       </button>
 
-      <!-- Botón Acceder inicial -->
-      <button id="login-btn" onclick="openLoginModal()" class="bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-2 px-5 rounded-xl flex items-center gap-2 transition-all text-sm shadow-lg shadow-blue-900/20 cursor-pointer">
-        <i class="fab fa-discord"></i> Acceder
+      <!-- Botón Acceder inicial (directo al OAuth oficial de Discord) -->
+      <button id="login-btn" onclick="redirectToYourDiscordOAuth()" class="bg-[#5865F2] hover:bg-[#4752C4] active:scale-95 text-white font-black py-2.5 px-5 rounded-xl flex items-center gap-2.5 transition-all text-xs tracking-wide shadow-[0_4px_18px_rgba(88,101,242,0.4)] hover:shadow-[0_6px_22px_rgba(88,101,242,0.55)] cursor-pointer">
+        <i class="fab fa-discord text-base"></i>
+        <span>Acceder con Discord</span>
       </button>
 
       <!-- Sección Usuario Logueado (Idéntica al screenshot del usuario) -->
@@ -1294,9 +1293,7 @@ let tempDiscordAvatar = '';
 
 function openLoginModal(returnToPage = null) {
   window.pendingRedirectPage = returnToPage;
-  document.getElementById('discord-oauth-card-1').classList.remove('hidden');
-  document.getElementById('discord-oauth-card-2').classList.add('hidden');
-  document.getElementById('login-modal').classList.remove('hidden');
+  redirectToYourDiscordOAuth();
 }
 
 function closeLoginModal() {
@@ -1310,8 +1307,11 @@ function closeLoginModal() {
 const DISCORD_CLIENT_ID = "1550989825509818519";
 
 function getDiscordOAuthUrl() {
-  // Redirigir dinámicamente a tu propia tienda actual
-  const currentStoreUrl = window.location.origin + window.location.pathname;
+  // Redirigir limpiamente a tu tienda actual (ej: https://jl-code-1.vercel.app/)
+  let currentStoreUrl = window.location.origin + window.location.pathname;
+  if (!currentStoreUrl.endsWith('/')) {
+    currentStoreUrl += '/';
+  }
   const redirectUri = encodeURIComponent(currentStoreUrl);
   return `https://discord.com/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=identify%20email`;
 }
