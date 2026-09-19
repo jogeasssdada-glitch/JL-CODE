@@ -627,64 +627,60 @@ body {
         </div>
       </div>
 
-      <!-- Columna Derecha: Tarjeta de Resumen de la Orden (Exacta al Screenshot) -->
+      <!-- Columna Derecha: Tarjeta de Resumen de la Orden (Idéntica al Screenshot) -->
       <div>
-        <div class="bg-[#120707] border border-red-900/40 rounded-3xl p-7 shadow-2xl relative sticky top-24">
-          <h3 class="text-2xl font-black text-white mb-6">Resumen de la Orden</h3>
+        <div class="bg-[#0e0505] border border-red-950/70 rounded-3xl p-7 shadow-[0_0_40px_rgba(255,0,0,0.12)] relative sticky top-24">
+          <h3 class="text-2xl font-black text-white mb-6 tracking-wide">Resumen de la Orden</h3>
 
           <!-- Sección Cupón de Descuento -->
           <div class="mb-6">
             <label class="block text-xs text-gray-400 mb-2">¿Tienes un cupón de descuento?</label>
-            <div class="flex rounded-xl overflow-hidden border border-red-950/60 bg-[#080303] focus-within:border-red-600 transition-all">
-              <input type="text" id="coupon-code-input" placeholder="CUPÓN DE DESCUENTO" class="flex-1 bg-transparent px-4 py-3 text-xs text-white placeholder-gray-600 uppercase font-semibold focus:outline-none">
-              <button onclick="applyCoupon()" class="bg-red-600 hover:bg-red-700 text-white font-black text-xs px-5 py-3 transition-colors uppercase cursor-pointer">
+            <div class="flex rounded-xl overflow-hidden border border-red-950/80 bg-[#050202] focus-within:border-red-600 transition-all">
+              <input type="text" id="coupon-code-input" placeholder="CUPÓN DE DESCUENTO" class="flex-1 bg-transparent px-4 py-3 text-xs text-white placeholder-gray-600 uppercase font-bold focus:outline-none tracking-wider">
+              <button onclick="applyCoupon()" class="bg-[#ff0000] hover:bg-[#cc0000] text-white font-black text-xs px-6 py-3 transition-all uppercase cursor-pointer tracking-wider">
                 APLICAR
               </button>
             </div>
             <p id="coupon-message" class="text-xs mt-1.5 hidden"></p>
           </div>
 
-          <div class="border-t border-red-950/60 my-6"></div>
+          <div class="border-t border-white/5 my-6"></div>
 
           <!-- Términos y Condiciones Checkbox -->
           <div class="flex items-start gap-3 mb-6">
-            <input type="checkbox" id="terms-checkbox" class="mt-1 w-4 h-4 rounded border-red-900/60 bg-[#080303] accent-red-600 cursor-pointer">
+            <input type="checkbox" id="terms-checkbox" checked class="mt-1 w-4 h-4 rounded border-red-900/60 bg-[#080303] accent-red-600 cursor-pointer">
             <label for="terms-checkbox" class="text-xs text-gray-400 leading-relaxed cursor-pointer select-none">
               Acepto los <a href="#" class="text-red-500 underline hover:text-red-400">Términos de uso</a> y la <a href="#" class="text-red-500 underline hover:text-red-400">Política de privacidad</a>.
             </label>
           </div>
 
+          <div class="border-t border-white/5 my-6"></div>
+
           <!-- Subtotal y Total -->
           <div class="space-y-4 mb-6">
             <div class="flex justify-between items-center text-sm">
-              <span class="text-gray-400">Subtotal:</span>
-              <span id="cart-summary-subtotal" class="text-white font-bold text-base">$0.00</span>
+              <span class="text-gray-400 font-medium">Subtotal:</span>
+              <span id="cart-summary-subtotal" class="text-white font-bold text-sm">$0.00</span>
             </div>
             <div class="flex justify-between items-center">
-              <span class="text-white font-bold text-lg">Total</span>
-              <span id="cart-summary-total" class="text-3xl font-black text-red-600 red-glow">$ 0.00</span>
+              <span class="text-white font-black text-lg tracking-wide">Total</span>
+              <span id="cart-summary-total" class="text-3xl font-black text-[#ff0000] red-glow">$ 0.00</span>
             </div>
           </div>
 
-          <!-- Campo Usuario de Discord -->
-          <div class="mb-5">
-            <label class="block text-xs font-bold text-gray-400 mb-1.5 uppercase tracking-wide">Usuario de Discord (para entrega):</label>
-            <input type="text" id="checkout-discord-user" placeholder="Ej: MiUsuario#0000" class="w-full bg-[#080303] border border-red-950/60 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-red-600">
-          </div>
-
-          <!-- Botón de Pago / Finalizar Compra con PayPal -->
-          <button onclick="processPurchaseFromPage()" id="checkout-page-btn" class="w-full bg-[#0070ba] hover:bg-[#003087] text-white font-black py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-900/40 text-sm uppercase tracking-wide cursor-pointer mb-3">
-            <i class="fab fa-paypal text-base"></i> Pagar con PayPal
+          <!-- Botón Comprar (Rojo Brillante Premium que manda a PayPal.me) -->
+          <button onclick="processPurchaseFromPage()" id="checkout-page-btn" class="w-full bg-[#ff0000] hover:bg-[#d60000] active:scale-[0.98] text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-[0_4px_25px_rgba(255,0,0,0.45)] hover:shadow-[0_6px_30px_rgba(255,0,0,0.65)] text-sm uppercase tracking-wider cursor-pointer mb-3">
+            <i class="fas fa-shopping-bag text-base"></i> COMPRAR
           </button>
 
           <!-- Botón Sigue Comprando (igual al screenshot) -->
-          <button onclick="showPage('productos')" class="w-full bg-[#0a0505] hover:bg-[#150a0a] border border-red-950/80 hover:border-red-800 text-gray-300 hover:text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all text-sm cursor-pointer">
-            <i class="fas fa-arrow-left text-xs"></i> Sigue comprando
+          <button onclick="showPage('productos')" class="w-full bg-[#0a0505] hover:bg-[#150a0a] border border-red-950/60 hover:border-red-800 text-gray-300 hover:text-white font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2.5 transition-all text-xs cursor-pointer">
+            <i class="fas fa-arrow-left text-[11px]"></i> Sigue comprando
           </button>
 
-          <!-- Footer de Seguridad -->
-          <div class="flex items-center justify-center gap-2 text-gray-500 text-xs mt-5 pt-4 border-t border-red-950/40">
-            <i class="fas fa-shield-alt text-gray-400"></i>
+          <!-- Footer de Seguridad (igual al screenshot) -->
+          <div class="flex items-center justify-center gap-2 text-gray-500 text-[11px] mt-5 pt-3">
+            <i class="fas fa-shield-alt text-gray-400 text-xs"></i>
             <span>Pago seguro y entrega instantánea</span>
           </div>
         </div>
@@ -1063,13 +1059,7 @@ function processPurchaseFromPage() {
   }
 
   const discordInput = document.getElementById('checkout-discord-user');
-  const buyerName = discordInput ? discordInput.value.trim() : '';
-
-  if (!buyerName) {
-    showToast('Por favor escribe tu Discord para la entrega', 'warning');
-    if (discordInput) discordInput.focus();
-    return;
-  }
+  const buyerName = currentUser ? currentUser.username : (discordInput ? discordInput.value.trim() : 'Cliente Discord');
 
   const subtotal = cart.reduce((acc, item) => acc + Number(item.price || 0), 0);
   const total = Math.max(0, subtotal - (subtotal * appliedDiscount));
@@ -1098,7 +1088,7 @@ function processPurchaseFromPage() {
     return;
   }
 
-  // Si requiere pago, abrir el modal de PayPal con el destinatario encarnacionjuan999@gmail.com
+  // Orden pendiente de confirmación
   pendingPaypalOrder = {
     buyer: buyerName,
     items: purchasedItemsWithLicenses,
@@ -1106,13 +1096,20 @@ function processPurchaseFromPage() {
     cartLength: cart.length
   };
 
+  const paypalMeUrl = `https://paypal.me/juanencarnacion542/${total.toFixed(2)}USD?locale.x=es_XC&country.x=DO`;
+
+  // Abrir PayPal.me directamente en una pestaña nueva para pagar
+  window.open(paypalMeUrl, '_blank');
+
+  // Y mostrar modal de verificación para ingresar la transacción y entregar licencias
   document.getElementById('paypal-modal-amount').textContent = '$' + total.toFixed(2) + ' USD';
   const directLink = document.getElementById('paypal-direct-link');
   if (directLink) {
-    directLink.href = `https://paypal.me/juanencarnacion542/${total.toFixed(2)}USD?locale.x=es_XC&country.x=DO`;
+    directLink.href = paypalMeUrl;
   }
   document.getElementById('paypal-tx-id').value = '';
   document.getElementById('paypal-modal').classList.remove('hidden');
+  showToast('Abriendo PayPal para completar el pago...', 'info');
 }
 
 function closePaypalModal() {
