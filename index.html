@@ -927,8 +927,10 @@ async function fetchProductsFromCloud() {
       if (data && data.record && Array.isArray(data.record.products)) {
         allProducts = data.record.products;
         localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
+        buildCategories();
         renderProducts();
         renderAdminProductsList();
+        renderMisProductos();
         updateLiveStats();
       }
     }
@@ -1130,15 +1132,22 @@ function renderMisProductos() {
   const orders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
 
   // Extraer todos los productos comprados de todas las órdenes de este usuario
+  // y filtrar solo aquellos recursos que aún existan en la tienda (si se eliminó de la tienda, ya no aparece aquí)
   const allPurchasedItems = [];
-  orders.forEach(order => {
+  orders.forEach((order, orderIdx) => {
     if (order.items && Array.isArray(order.items)) {
-      order.items.forEach(item => {
-        allPurchasedItems.push({
-          ...item,
-          orderDate: order.date,
-          orderTx: order.paypal_tx
-        });
+      order.items.forEach((item, itemIdx) => {
+        // Verificar si el producto aún existe en allProducts (por ID o por Nombre)
+        const existsInStore = allProducts.some(p => p.id === item.id || p.name.toLowerCase().trim() === item.name.toLowerCase().trim());
+        if (existsInStore) {
+          allPurchasedItems.push({
+            ...item,
+            orderDate: order.date,
+            orderTx: order.paypal_tx,
+            orderIndex: orderIdx,
+            itemIndex: itemIdx
+          });
+        }
       });
     }
   });
@@ -1147,8 +1156,8 @@ function renderMisProductos() {
     container.innerHTML = `
       <div class="col-span-full bg-[#120707] border border-red-950/50 rounded-2xl p-12 text-center">
         <i class="fas fa-box-open text-5xl text-gray-600 mb-4"></i>
-        <h3 class="text-xl font-bold text-white mb-2">No tienes productos comprados</h3>
-        <p class="text-gray-400 text-sm mb-6">Aún no has adquirido ningún script con la cuenta <strong>${currentUser.username}</strong>.</p>
+        <h3 class="text-xl font-bold text-white mb-2">No tienes productos activos</h3>
+        <p class="text-gray-400 text-sm mb-6">No hay recursos disponibles asociados a tu cuenta <strong>${currentUser.username}</strong>.</p>
         <button onclick="showPage('productos')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl transition-all cursor-pointer">
           Explorar Tienda
         </button>
@@ -1158,15 +1167,20 @@ function renderMisProductos() {
   }
 
   container.innerHTML = allPurchasedItems.map(item => `
-    <div class="bg-[#120707] border border-red-950/60 hover:border-red-600/50 rounded-2xl p-5 transition-all shadow-xl">
-      <div class="flex items-center gap-4 mb-4">
-        <img src="${item.image || 'https://xfcode.xyz/files/XF_LOGO.png'}" alt="${item.name}" class="w-14 h-14 rounded-xl object-cover border border-red-900/60 flex-shrink-0">
-        <div class="overflow-hidden">
-          <h4 class="text-white font-bold text-base truncate">${item.name}</h4>
-          <span class="inline-flex items-center gap-1.5 text-xs text-green-400 font-semibold mt-0.5">
-            <i class="fas fa-check-circle text-[10px]"></i> Comprado y Verificado
-          </span>
+    <div class="bg-[#120707] border border-red-950/60 hover:border-red-600/50 rounded-2xl p-5 transition-all shadow-xl relative group">
+      <div class="flex items-center justify-between gap-4 mb-4">
+        <div class="flex items-center gap-4 overflow-hidden">
+          <img src="${item.image || 'https://xfcode.xyz/files/XF_LOGO.png'}" alt="${item.name}" class="w-14 h-14 rounded-xl object-cover border border-red-900/60 flex-shrink-0">
+          <div class="overflow-hidden">
+            <h4 class="text-white font-bold text-base truncate">${item.name}</h4>
+            <span class="inline-flex items-center gap-1.5 text-xs text-green-400 font-semibold mt-0.5">
+              <i class="fas fa-check-circle text-[10px]"></i> Comprado y Verificado
+            </span>
+          </div>
         </div>
+        <button onclick="removeProductFromMyLibrary(${item.orderIndex}, ${item.itemIndex})" class="text-gray-500 hover:text-red-500 p-2 hover:bg-red-950/40 rounded-xl transition-colors cursor-pointer" title="Quitar de mi biblioteca">
+          <i class="fas fa-trash-alt text-sm"></i>
+        </button>
       </div>
 
       <!-- Licencia -->
@@ -1186,6 +1200,22 @@ function renderMisProductos() {
       </a>
     </div>
   `).join('');
+}
+
+function removeProductFromMyLibrary(orderIdx, itemIdx) {
+  if (!confirm('¿Deseas quitar este producto de tu biblioteca personal?')) return;
+  const ordersKey = getUserOrdersKey();
+  if (!ordersKey) return;
+  let orders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
+  if (orders[orderIdx] && orders[orderIdx].items) {
+    orders[orderIdx].items.splice(itemIdx, 1);
+    if (orders[orderIdx].items.length === 0) {
+      orders.splice(orderIdx, 1);
+    }
+    localStorage.setItem(ordersKey, JSON.stringify(orders));
+    renderMisProductos();
+    showToast('Producto quitado de tu biblioteca', 'info');
+  }
 }
 
 function generateLicenseKey(prefix = 'JL') {
@@ -1906,8 +1936,21 @@ function adminDeleteProduct(id) {
   allProducts = allProducts.filter(p => p.id !== id);
   localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
   saveProductsToCloud(allProducts);
+
+  // Limpiar del carrito del usuario si lo tenía añadido
+  const cartKey = getUserCartKey();
+  let currentCart = JSON.parse(localStorage.getItem(cartKey) || '[]');
+  const updatedCart = currentCart.filter(item => item.id !== id);
+  if (updatedCart.length !== currentCart.length) {
+    localStorage.setItem(cartKey, JSON.stringify(updatedCart));
+    updateCartBadge();
+    renderCartPage();
+  }
+
+  buildCategories();
   renderProducts();
   renderAdminProductsList();
+  renderMisProductos();
   updateLiveStats();
   showToast('Recurso eliminado correctamente', 'warning');
 }
@@ -1918,8 +1961,17 @@ function adminClearAllProducts() {
   allProducts = [];
   localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
   saveProductsToCloud(allProducts);
+
+  // Limpiar carritos
+  const cartKey = getUserCartKey();
+  localStorage.removeItem(cartKey);
+  updateCartBadge();
+  renderCartPage();
+
+  buildCategories();
   renderProducts();
   renderAdminProductsList();
+  renderMisProductos();
   updateLiveStats();
   showToast('Todos los recursos han sido eliminados', 'warning');
 }
