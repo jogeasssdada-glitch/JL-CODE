@@ -486,7 +486,7 @@ body {
   <div class="user-panel-divider"></div>
 
   <div class="space-y-2">
-    <a href="#" onclick="showPage('productos'); toggleUserPanel(); return false;" class="user-panel-card-item">
+    <a href="#" onclick="showPage('mis-productos'); toggleUserPanel(); return false;" class="user-panel-card-item">
       <div class="user-panel-card-icon"><i class="fas fa-box"></i></div>
       <div class="user-panel-card-text"><h4>Mis Productos</h4><p>Ver y descargar mis compras</p></div>
     </a>
@@ -620,6 +620,27 @@ body {
       </div>
     </div>
     <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </section>
+
+  <!-- PÁGINA: MIS PRODUCTOS (COMPRAS DEL USUARIO LOGUEADO) -->
+  <section id="page-mis-productos" class="page max-w-6xl w-full mx-auto px-6 py-12">
+    <div class="flex items-center justify-between mb-8 pb-4 border-b border-red-950/40 flex-wrap gap-4">
+      <div>
+        <div class="inline-flex items-center gap-2 bg-green-500/10 border border-green-500/30 text-green-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
+          <i class="fas fa-box-check"></i> Biblioteca Personal
+        </div>
+        <h2 class="text-3xl md:text-4xl font-black text-white uppercase tracking-tight">Mis <span class="text-red-500">Productos</span></h2>
+        <p class="text-gray-400 text-sm">Aquí tienes todos los scripts y recursos comprados asociados a tu cuenta de Discord.</p>
+      </div>
+      <button onclick="showPage('productos')" class="bg-[#150a0a] border border-red-900/60 hover:border-red-500 text-gray-300 hover:text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer">
+        <i class="fas fa-store text-red-500"></i> Ir a la Tienda
+      </button>
+    </div>
+
+    <!-- Contenedor dinámico de mis productos -->
+    <div id="mis-productos-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Inyectado dinámicamente -->
+    </div>
   </section>
 
   <!-- PÁGINA 3: INTERFAZ COMPLETA DEL CARRITO DE COMPRAS (RÉPLICA EXACTA) -->
@@ -942,8 +963,24 @@ let currentDetailProduct = null;
 let currentImageIndex = 0;
 let selectedCategories = [];
 
+function getUserCartKey() {
+  if (currentUser && currentUser.username) {
+    const clean = currentUser.username.toLowerCase().trim().replace(/#0+$/, '');
+    return 'jlcode_cart_' + clean;
+  }
+  return 'papeleta_guest_cart';
+}
+
+function getUserOrdersKey() {
+  if (currentUser && currentUser.username) {
+    const clean = currentUser.username.toLowerCase().trim().replace(/#0+$/, '');
+    return 'jlcode_orders_' + clean;
+  }
+  return null;
+}
+
 function updateCartBadge() {
-  const cart = JSON.parse(localStorage.getItem('papeleta_cart') || '[]');
+  const cart = JSON.parse(localStorage.getItem(getUserCartKey()) || '[]');
   const countEl = document.getElementById('cart-count');
   if (countEl) {
     countEl.textContent = cart.length;
@@ -952,16 +989,22 @@ function updateCartBadge() {
 }
 
 function addToCart(productId) {
+  if (!currentUser) {
+    showToast('Debes iniciar sesión con tu Discord para añadir al carrito', 'warning');
+    openLoginModal('carrito');
+    return;
+  }
   const product = allProducts.find(p => p.id === productId);
   if (!product) return;
-  let cart = JSON.parse(localStorage.getItem('papeleta_cart') || '[]');
+  const cartKey = getUserCartKey();
+  let cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
   const exists = cart.find(i => i.id === productId);
   if (exists) {
     showToast('Este producto ya está en tu carrito', 'warning');
     return;
   }
   cart.push({ id: product.id, name: product.name, price: product.price, image: product.image_url });
-  localStorage.setItem('papeleta_cart', JSON.stringify(cart));
+  localStorage.setItem(cartKey, JSON.stringify(cart));
   updateCartBadge();
   showToast('¡Producto añadido al carrito!', 'success');
   renderCartPage();
@@ -1000,7 +1043,7 @@ function applyCoupon() {
 }
 
 function renderCartPage() {
-  const cart = JSON.parse(localStorage.getItem('papeleta_cart') || '[]');
+  const cart = JSON.parse(localStorage.getItem(getUserCartKey()) || '[]');
   const container = document.getElementById('full-cart-items');
   const subtotalEl = document.getElementById('cart-summary-subtotal');
   const totalEl = document.getElementById('cart-summary-total');
@@ -1056,12 +1099,93 @@ function renderCartPage() {
 }
 
 function removeFromCart(index) {
-  let cart = JSON.parse(localStorage.getItem('papeleta_cart') || '[]');
+  const cartKey = getUserCartKey();
+  let cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
   cart.splice(index, 1);
-  localStorage.setItem('papeleta_cart', JSON.stringify(cart));
+  localStorage.setItem(cartKey, JSON.stringify(cart));
   updateCartBadge();
   renderCartPage();
   showToast('Producto eliminado del carrito', 'warning');
+}
+
+function renderMisProductos() {
+  const container = document.getElementById('mis-productos-container');
+  if (!container) return;
+
+  if (!currentUser) {
+    container.innerHTML = `
+      <div class="col-span-full bg-[#120707] border border-red-950/50 rounded-2xl p-12 text-center">
+        <i class="fas fa-user-lock text-5xl text-gray-600 mb-4"></i>
+        <h3 class="text-xl font-bold text-white mb-2">Inicia sesión con Discord</h3>
+        <p class="text-gray-400 text-sm mb-6">Debes iniciar sesión para consultar tu biblioteca de compras y licencias.</p>
+        <button onclick="redirectToYourDiscordOAuth()" class="bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-3 px-6 rounded-xl transition-all cursor-pointer">
+          Acceder con Discord
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const ordersKey = getUserOrdersKey();
+  const orders = JSON.parse(localStorage.getItem(ordersKey) || '[]');
+
+  // Extraer todos los productos comprados de todas las órdenes de este usuario
+  const allPurchasedItems = [];
+  orders.forEach(order => {
+    if (order.items && Array.isArray(order.items)) {
+      order.items.forEach(item => {
+        allPurchasedItems.push({
+          ...item,
+          orderDate: order.date,
+          orderTx: order.paypal_tx
+        });
+      });
+    }
+  });
+
+  if (allPurchasedItems.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full bg-[#120707] border border-red-950/50 rounded-2xl p-12 text-center">
+        <i class="fas fa-box-open text-5xl text-gray-600 mb-4"></i>
+        <h3 class="text-xl font-bold text-white mb-2">No tienes productos comprados</h3>
+        <p class="text-gray-400 text-sm mb-6">Aún no has adquirido ningún script con la cuenta <strong>${currentUser.username}</strong>.</p>
+        <button onclick="showPage('productos')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl transition-all cursor-pointer">
+          Explorar Tienda
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = allPurchasedItems.map(item => `
+    <div class="bg-[#120707] border border-red-950/60 hover:border-red-600/50 rounded-2xl p-5 transition-all shadow-xl">
+      <div class="flex items-center gap-4 mb-4">
+        <img src="${item.image || 'https://xfcode.xyz/files/XF_LOGO.png'}" alt="${item.name}" class="w-14 h-14 rounded-xl object-cover border border-red-900/60 flex-shrink-0">
+        <div class="overflow-hidden">
+          <h4 class="text-white font-bold text-base truncate">${item.name}</h4>
+          <span class="inline-flex items-center gap-1.5 text-xs text-green-400 font-semibold mt-0.5">
+            <i class="fas fa-check-circle text-[10px]"></i> Comprado y Verificado
+          </span>
+        </div>
+      </div>
+
+      <!-- Licencia -->
+      <div class="bg-[#080303] border border-red-950/80 rounded-xl p-3 mb-3">
+        <div class="flex items-center justify-between text-xs text-gray-400 mb-1">
+          <span class="font-bold text-gray-300"><i class="fas fa-key text-yellow-500 mr-1"></i> Licencia:</span>
+          <button onclick="copyToClipboard('${item.license}')" class="text-red-400 hover:text-red-300 font-bold text-xs cursor-pointer">
+            <i class="fas fa-copy mr-1"></i> Copiar
+          </button>
+        </div>
+        <div class="text-xs font-mono font-black text-yellow-400 select-all tracking-wider">${item.license}</div>
+      </div>
+
+      <!-- Botón de Descarga directa -->
+      <a href="${item.download_url}" target="_blank" download class="w-full bg-gradient-to-r from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-xs transition-all shadow-md">
+        <i class="fas fa-download"></i> Descargar Recurso
+      </a>
+    </div>
+  `).join('');
 }
 
 function generateLicenseKey(prefix = 'JL') {
@@ -1128,7 +1252,8 @@ async function sendDiscordWebhook(orderData) {
 let pendingPaypalOrder = null;
 
 function processPurchaseFromPage() {
-  const cart = JSON.parse(localStorage.getItem('papeleta_cart') || '[]');
+  const cartKey = getUserCartKey();
+  const cart = JSON.parse(localStorage.getItem(cartKey) || '[]');
   if (cart.length === 0) {
     showToast('Tu carrito está vacío', 'warning');
     return;
@@ -1248,8 +1373,8 @@ async function finalizeOrder(orderData) {
   });
   localStorage.setItem(userPurchasesKey, JSON.stringify(existingOrders));
 
-  // Vaciar carrito
-  localStorage.removeItem('papeleta_cart');
+  // Vaciar carrito personal del usuario
+  localStorage.removeItem(getUserCartKey());
   appliedDiscount = 0;
   updateCartBadge();
   renderCartPage();
@@ -1487,6 +1612,8 @@ async function confirmDiscordAuthorization() {
   const targetPage = window.pendingRedirectPage;
   closeLoginModal();
   updateAuthUI();
+  updateCartBadge();
+  renderCartPage();
 
   if (isAdm) {
     showToast('¡Bienvenido Administrador ' + username + '!', 'success');
@@ -1512,10 +1639,12 @@ function logout() {
   currentUser = null;
   tempDiscordAvatar = '';
   updateAuthUI();
+  updateCartBadge();
+  renderCartPage();
   document.getElementById('user-panel').classList.remove('active');
   document.getElementById('user-panel-overlay').classList.remove('active');
   showPage('inicio');
-  showToast('Sesión cerrada', 'warning');
+  showToast('Sesión cerrada correctamente', 'warning');
 }
 
 function updateAuthUI() {
@@ -1632,6 +1761,10 @@ function showPage(name, bypassPinCheck = false) {
 
   if (name === 'carrito') {
     renderCartPage();
+  }
+
+  if (name === 'mis-productos') {
+    renderMisProductos();
   }
 
   if (name === 'admin') {
@@ -2118,6 +2251,8 @@ document.addEventListener('DOMContentLoaded', () => {
           };
           localStorage.setItem('jlcode_user', JSON.stringify(currentUser));
           updateAuthUI();
+          updateCartBadge();
+          renderCartPage();
           showToast(`¡Bienvenido ${user.username}! Sesión iniciada con Discord`, 'success');
           window.location.hash = '#inicio';
         }
@@ -2128,14 +2263,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Soporte directo por Hash (ej: jl-code.vercel.app/#carrito)
   const initialPage = window.location.hash ? window.location.hash.replace('#', '') : 'inicio';
-  if (['inicio', 'productos', 'carrito', 'preguntas', 'admin'].includes(initialPage)) {
+  if (['inicio', 'productos', 'carrito', 'mis-productos', 'preguntas', 'admin'].includes(initialPage)) {
     showPage(initialPage);
   }
 });
 
 window.addEventListener('hashchange', () => {
   const page = window.location.hash ? window.location.hash.replace('#', '') : 'inicio';
-  if (['inicio', 'productos', 'carrito', 'preguntas', 'admin'].includes(page)) {
+  if (['inicio', 'productos', 'carrito', 'mis-productos', 'preguntas', 'admin'].includes(page)) {
     showPage(page);
   }
 });
