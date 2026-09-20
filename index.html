@@ -855,16 +855,64 @@ body {
 <script>
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1550769072998977559/y2NdA44uX3IBlYz5nnTOFmHDXo4MXiRZXr-RSxxEZe35G5xoaV64Tm-cjdvO6gMkHrpI";
 
+const JSONBIN_BIN_ID = "6ab0509fac6210605ae3c3cf";
+const JSONBIN_MASTER_KEY = "$2a$10$cB8ZiUMf2fFGs4tflZblTOAKGSV24U2wsJAKtCxDg0mXABhuyh9AW";
+
 const DEFAULT_PRODUCTS = [];
 
 const DEFAULT_REVIEWS = [];
 
-// Catálogo visible para todo el mundo (combina productos del sistema con los subidos)
+// Catálogo visible para todo el mundo
 let allProducts = (() => {
   const custom = JSON.parse(localStorage.getItem('jlcode_custom_products') || 'null');
   if (custom && custom.length > 0) return custom;
   return DEFAULT_PRODUCTS;
 })();
+
+// Cargar productos en tiempo real desde la nube de JSONBin
+async function fetchProductsFromCloud() {
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+      headers: {
+        'X-Master-Key': JSONBIN_MASTER_KEY
+      }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.record && Array.isArray(data.record.products)) {
+        allProducts = data.record.products;
+        localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
+        renderProducts();
+        renderAdminProductsList();
+        updateLiveStats();
+      }
+    }
+  } catch (err) {
+    console.warn("No se pudo sincronizar con la nube JSONBin:", err);
+  }
+}
+
+// Guardar productos en tiempo real a la nube de JSONBin
+async function saveProductsToCloud(productsList) {
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_MASTER_KEY
+      },
+      body: JSON.stringify({ products: productsList })
+    });
+    if (res.ok) {
+      showToast('☁️ Catálogo sincronizado en la nube para todo el mundo', 'success');
+      return true;
+    }
+  } catch (err) {
+    console.error("Error al guardar en JSONBin:", err);
+    showToast('Aviso: Guardado localmente, error temporal en la nube', 'warning');
+  }
+  return false;
+}
 let currentUser = JSON.parse(localStorage.getItem('jlcode_user') || 'null');
 let currentDetailProduct = null;
 let currentImageIndex = 0;
@@ -1430,7 +1478,7 @@ async function confirmDiscordAuthorization() {
 function isAdminUser(user) {
   if (!user || !user.username) return false;
   const clean = user.username.toLowerCase().trim().replace(/#0+$/, '');
-  return clean === 'chinito_jl';
+  return clean === 'chinito_jl' || clean === 'chinito_jl1';
 }
 
 function logout() {
@@ -1599,6 +1647,7 @@ function adminSaveProduct(event) {
 
   allProducts.unshift(newProduct);
   localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
+  saveProductsToCloud(allProducts);
 
   // Reset form
   document.getElementById('admin-add-product-form').reset();
@@ -1654,6 +1703,7 @@ function adminDeleteProduct(id) {
   if (!confirm('¿Estás seguro de eliminar este recurso de la tienda?')) return;
   allProducts = allProducts.filter(p => p.id !== id);
   localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
+  saveProductsToCloud(allProducts);
   renderProducts();
   renderAdminProductsList();
   updateLiveStats();
@@ -1665,6 +1715,7 @@ function adminClearAllProducts() {
   if (!confirm('¿Estás seguro de que quieres borrar TODOS los recursos de la tienda?')) return;
   allProducts = [];
   localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
+  saveProductsToCloud(allProducts);
   renderProducts();
   renderAdminProductsList();
   updateLiveStats();
@@ -1957,6 +2008,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initParticles();
   animateParticles();
   renderProducts();
+  fetchProductsFromCloud(); // Descargar catálogo de la nube JSONBin
   loadLeaderboard();
   loadReviews();
   updateAuthUI();
@@ -1964,11 +2016,12 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCartPage();
   updateLiveStats();
 
-  // Actualizar estadísticas y podio cada 30 segundos en tiempo real
+  // Actualizar estadísticas, productos y podio en tiempo real
   setInterval(() => {
+    fetchProductsFromCloud();
     updateLiveStats();
     loadLeaderboard();
-  }, 30000);
+  }, 20000);
 
   // Soporte de autenticación directa con Discord OAuth (si regresa con access_token en el hash)
   if (window.location.hash && window.location.hash.includes('access_token=')) {
@@ -1982,7 +2035,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(user => {
         if (user && user.username) {
           const cleanUser = user.username.toLowerCase().trim().replace(/#0+$/, '');
-          const isAdm = cleanUser === 'chinito_jl';
+          const isAdm = cleanUser === 'chinito_jl' || cleanUser === 'chinito_jl1';
           const avatarUrl = user.avatar 
             ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
             : getDiscordAvatar(user.username);
