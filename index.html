@@ -358,6 +358,30 @@ body {
   </div>
 </div>
 
+<!-- MODAL DE ACCESO CON CONTRASEÑA PARA PANEL ADMIN -->
+<div id="admin-pin-modal" class="hidden fixed inset-0 bg-black/90 z-[98] flex items-center justify-center px-4 backdrop-blur-md">
+  <div class="max-w-sm w-full bg-[#120707] border border-red-700/60 rounded-3xl p-7 text-center shadow-[0_0_50px_rgba(255,0,0,0.3)] relative">
+    <button onclick="closeAdminPinModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="fas fa-times text-lg"></i></button>
+
+    <div class="w-14 h-14 mx-auto rounded-2xl mb-4 bg-gradient-to-br from-red-600 to-red-950 flex items-center justify-center border border-red-500 shadow-lg text-white text-2xl">
+      <i class="fas fa-lock"></i>
+    </div>
+
+    <h3 class="text-xl font-black text-white uppercase tracking-wide mb-1">Acceso de Seguridad</h3>
+    <p class="text-xs text-gray-400 mb-5">Ingresa la clave de administrador para desbloquear el panel.</p>
+
+    <form onsubmit="verifyAdminPin(event)">
+      <div class="mb-4">
+        <input type="password" id="admin-pin-input" placeholder="Contraseña Admin..." autofocus class="w-full bg-[#080303] border border-red-900/60 focus:border-red-500 rounded-xl px-4 py-3 text-center text-sm text-white placeholder-gray-600 focus:outline-none tracking-widest font-mono">
+      </div>
+
+      <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-xl transition-all shadow-lg shadow-red-900/40 text-xs uppercase tracking-wider cursor-pointer">
+        <i class="fas fa-key mr-1.5"></i> Desbloquear Panel
+      </button>
+    </form>
+  </div>
+</div>
+
 <!-- MODAL DE PAGO CON PAYPAL -->
 <div id="paypal-modal" class="hidden fixed inset-0 bg-black/90 z-[92] flex items-center justify-center px-4 backdrop-blur-md overflow-y-auto py-8">
   <div class="max-w-md w-full bg-[#120707] border border-[#0070ba]/60 rounded-3xl p-6 md:p-8 text-center shadow-[0_0_60px_rgba(0,112,186,0.3)] relative my-auto">
@@ -1418,7 +1442,7 @@ const CHINITO_JL_OFFICIAL_AVATAR = "https://images.unsplash.com/photo-1534528741
 function getDiscordAvatar(username) {
   if (!username) return "https://cdn.discordapp.com/embed/avatars/0.png";
   const clean = username.toLowerCase().trim().replace(/#0+$/, '');
-  if (clean === 'chinito_jl' || clean === 'chinito_jl1') {
+  if (clean === 'chinito_jl') {
     return CHINITO_JL_OFFICIAL_AVATAR;
   }
   // Si el usuario ingresa un ID numérico de Discord (snowflake de 17-19 dígitos)
@@ -1478,11 +1502,13 @@ async function confirmDiscordAuthorization() {
 function isAdminUser(user) {
   if (!user || !user.username) return false;
   const clean = user.username.toLowerCase().trim().replace(/#0+$/, '');
-  return clean === 'chinito_jl' || clean === 'chinito_jl1';
+  return clean === 'chinito_jl';
 }
 
 function logout() {
   localStorage.removeItem('jlcode_user');
+  sessionStorage.removeItem('jlcode_admin_unlocked');
+  isAdminUnlocked = false;
   currentUser = null;
   tempDiscordAvatar = '';
   updateAuthUI();
@@ -1539,7 +1565,44 @@ function updateAuthUI() {
   }
 }
 
-function showPage(name) {
+let isAdminUnlocked = sessionStorage.getItem('jlcode_admin_unlocked') === 'true';
+
+function openAdminPinModal() {
+  const modal = document.getElementById('admin-pin-modal');
+  const input = document.getElementById('admin-pin-input');
+  if (modal) modal.classList.remove('hidden');
+  if (input) {
+    input.value = '';
+    setTimeout(() => input.focus(), 150);
+  }
+}
+
+function closeAdminPinModal() {
+  const modal = document.getElementById('admin-pin-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function verifyAdminPin(event) {
+  if (event) event.preventDefault();
+  const input = document.getElementById('admin-pin-input');
+  const enteredPin = input ? input.value.trim() : '';
+
+  if (enteredPin === '1.0') {
+    isAdminUnlocked = true;
+    sessionStorage.setItem('jlcode_admin_unlocked', 'true');
+    closeAdminPinModal();
+    showToast('🔓 Acceso verificado correctamente', 'success');
+    showPage('admin', true);
+  } else {
+    showToast('❌ Contraseña incorrecta', 'warning');
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+  }
+}
+
+function showPage(name, bypassPinCheck = false) {
   // Proteger la interfaz del carrito: requiere iniciar sesión con Discord
   if (name === 'carrito' && !currentUser) {
     showToast('Debes iniciar sesión con tu Discord para ver el carrito', 'warning');
@@ -1547,11 +1610,17 @@ function showPage(name) {
     return;
   }
 
-  // Proteger el Panel de Administración: estrictamente solo para chinito_jl
-  if (name === 'admin' && !isAdminUser(currentUser)) {
-    showToast('Acceso denegado: solo el administrador chinito_jl puede entrar al panel', 'warning');
-    showPage('inicio');
-    return;
+  // Proteger el Panel de Administración: estrictamente solo para chinito_jl con contraseña 1.0
+  if (name === 'admin') {
+    if (!isAdminUser(currentUser)) {
+      showToast('Acceso denegado: solo el administrador chinito_jl puede entrar al panel', 'warning');
+      showPage('inicio');
+      return;
+    }
+    if (!isAdminUnlocked && !bypassPinCheck) {
+      openAdminPinModal();
+      return;
+    }
   }
 
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -2035,7 +2104,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(user => {
         if (user && user.username) {
           const cleanUser = user.username.toLowerCase().trim().replace(/#0+$/, '');
-          const isAdm = cleanUser === 'chinito_jl' || cleanUser === 'chinito_jl1';
+          const isAdm = cleanUser === 'chinito_jl';
           const avatarUrl = user.avatar 
             ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
             : getDiscordAvatar(user.username);
