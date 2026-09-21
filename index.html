@@ -901,7 +901,7 @@ body {
       <div class="reviews-container">
         <div class="reviews-title">
           <h2>LA VOZ DE QUIENES CONFÍAN EN <span> NOSOTROS</span></h2>
-          <p>Opiniones reales de miembros de nuestra comunidad de Discord que potencian sus servidores con BS STORE</p>
+          <p>No lo decimos nosotros. Lo dicen quienes ya utilizan nuestros scripts</p>
         </div>
         <div class="reviews-slider-wrapper">
           <div class="reviews-slider" id="reviews-slider"></div>
@@ -955,43 +955,9 @@ function isRateLimited(action, cooldownMs = 2000) {
   return false;
 }
 
-const DEFAULT_REVIEWS = [
-  {
-    username: "Alex_FiveM",
-    avatar: "https://cdn.discordapp.com/embed/avatars/1.png",
-    date: "Hace 2 días",
-    product: "Sistema de Garajes & Llaves",
-    text: "Increíble optimización. El script corre a 0.00ms en el resmon de mi servidor y la instalación fue súper rápida gracias a la guía."
-  },
-  {
-    username: "Kevinn_Dev",
-    avatar: "https://cdn.discordapp.com/embed/avatars/2.png",
-    date: "Hace 4 días",
-    product: "Pack HUD & Notificaciones UI",
-    text: "La interfaz es limpia, elegante y muy moderna. La atención por ticket en su Discord fue de 10/10, me ayudaron con una duda al instante."
-  },
-  {
-    username: "Santii_RP",
-    avatar: "https://cdn.discordapp.com/embed/avatars/3.png",
-    date: "Hace 1 semana",
-    product: "Robos a Bancos & Joyería",
-    text: "100% recomendado. Mis usuarios están encantados con las animaciones y la mecánica del minijuego. BS STORE tiene los mejores scripts."
-  },
-  {
-    username: "Marcoss_Owner",
-    avatar: "https://cdn.discordapp.com/embed/avatars/4.png",
-    date: "Hace 1 semana",
-    product: "Sistema VIP & Recompensas",
-    text: "Excelente relación calidad-precio. La entrega de la licencia y el enlace de descarga fue inmediata tras el pago. Volveré a comprar seguro."
-  },
-  {
-    username: "David_Scripts",
-    avatar: "https://cdn.discordapp.com/embed/avatars/5.png",
-    date: "Hace 2 semanas",
-    product: "Mapeo & Interiores Exclusivos",
-    text: "Mapeados de altísimo nivel sin caídas de FPS ni texturas bugeadas. Gran trabajo del equipo de desarrollo de BS STORE."
-  }
-];
+const DEFAULT_PRODUCTS = [];
+
+const DEFAULT_REVIEWS = [];
 
 // Catálogo visible para todo el mundo
 let allProducts = (() => {
@@ -2278,12 +2244,11 @@ function loadLeaderboard() {
 
 function loadReviews() {
   const slider = document.getElementById('reviews-slider');
-  if (!slider) return;
   const reviewsHTML = DEFAULT_REVIEWS.map(r => `
     <div class="review-card-slide">
       <div>
         <div class="review-header">
-          <img src="${r.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="${r.username}" class="review-avatar">
+          <img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="${r.username}" class="review-avatar">
           <div class="review-user-info">
             <h4>${r.username}</h4>
             <p class="review-date">${r.date}</p>
