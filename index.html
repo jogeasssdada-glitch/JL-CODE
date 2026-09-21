@@ -933,7 +933,7 @@ body {
 </footer>
 
 <script>
-const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1550769072998977559/y2NdA44uX3IBlYz5nnTOFmHDXo4MXiRZXr-RSxxEZe35G5xoaV64Tm-cjdvO6gMkHrpI";
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1551740017045413953/bVqc9ZwI6bgF51W0ctqbuvUWcpod5iNmuOr5U0cxWRMPQuKAW7tn3e3BC5ORkd1Q0JCv";
 
 const JSONBIN_BIN_ID = "6ab0509fac6210605ae3c3cf";
 const JSONBIN_MASTER_KEY = "$2a$10$cB8ZiUMf2fFGs4tflZblTOAKGSV24U2wsJAKtCxDg0mXABhuyh9AW";
@@ -1297,39 +1297,60 @@ function generateLicenseKey(prefix = 'BS') {
 
 async function sendDiscordWebhook(orderData) {
   try {
+    const isFree = Number(orderData.total) === 0;
+    const paymentMethodText = isFree ? "🎁 Producto Gratuito" : (orderData.paypal_tx ? `PayPal (TX: \`${orderData.paypal_tx}\`)` : "PayPal");
+    const totalText = isFree ? "🆓 GRATIS" : `$${Number(orderData.total).toFixed(2)} USD`;
+    const buyerName = orderData.buyer || 'Cliente Discord';
+    const buyerId = orderData.buyerId || (currentUser && currentUser.id ? currentUser.id : 'No especificado');
+    const orderNum = Date.now().toString().slice(-10);
+    const now = new Date();
+    const dateFormatted = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear().toString().slice(-2)}, ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+    const productsText = orderData.items.map(p => {
+      const priceStr = Number(p.price) === 0 ? "🆓 GRATIS" : `$${Number(p.price).toFixed(2)} USD`;
+      return `🛒 **${p.name}** — ${priceStr}`;
+    }).join('\n');
+
+    const licensesText = orderData.items.map(p => {
+      return `\`${p.license}\``;
+    }).join('\n');
+
     const embed = {
-      title: "🛒 Nueva Compra Realizada en BS STORE",
+      title: "🛍️ Nueva Compra Realizada",
+      description: "Un cliente ha realizado una nueva compra en **BS STORE**.",
       color: 16348438, // Naranja cálido BS STORE (#f97316)
+      thumbnail: {
+        url: "https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png"
+      },
       fields: [
         {
-          name: "👤 Cliente / Discord",
-          value: `**${orderData.buyer || 'Cliente Discord'}**`,
+          name: "👤 Cliente",
+          value: `**${buyerName}**\nID:\n\`\`\`${buyerId}\`\`\``,
           inline: true
         },
         {
-          name: "💰 Total Pagado",
-          value: `**$${orderData.total.toFixed(2)} USD**`,
+          name: "💰 Total",
+          value: `**${totalText}**`,
           inline: true
         },
         {
           name: "💳 Método de Pago",
-          value: orderData.paypal_tx ? `PayPal (TX: \`${orderData.paypal_tx}\`)` : 'PayPal / Verificado',
+          value: paymentMethodText,
           inline: true
         },
         {
-          name: "📦 Productos y Licencias",
-          value: orderData.items.map(p => `• **${p.name}** (${p.price === 0 ? 'GRATIS' : '$' + Number(p.price).toFixed(2)})\n  🔑 Licencia: \`${p.license}\``).join('\n\n'),
+          name: "📦 Productos",
+          value: productsText,
           inline: false
         },
         {
-          name: "🕒 Fecha",
-          value: new Date().toLocaleString('es-ES'),
+          name: "🔑 Licencia",
+          value: licensesText,
           inline: false
         }
       ],
       footer: {
-        text: "BS STORE - Sistema de Notificaciones de Ventas",
-        icon_url: "logo.png"
+        text: `BS STORE - Compra #${orderNum} - ${dateFormatted}`
       }
     };
 
@@ -1368,6 +1389,7 @@ function processPurchaseFromPage() {
 
   const discordInput = document.getElementById('checkout-discord-user');
   const buyerName = currentUser ? currentUser.username : (discordInput ? discordInput.value.trim() : 'Cliente Discord');
+  const buyerId = currentUser && currentUser.id ? currentUser.id : 'No especificado';
 
   const subtotal = cart.reduce((acc, item) => acc + Number(item.price || 0), 0);
   const total = Math.max(0, subtotal - (subtotal * appliedDiscount));
@@ -1375,7 +1397,7 @@ function processPurchaseFromPage() {
   // Generar licencias y adjuntar datos de descarga para cada producto comprado
   const purchasedItemsWithLicenses = cart.map(item => {
     const fullProduct = allProducts.find(p => p.id === item.id) || {};
-    const prefix = fullProduct.license_prefix || 'JL';
+    const prefix = fullProduct.license_prefix || 'BS';
     const licenseKey = generateLicenseKey(prefix);
     const downloadUrl = fullProduct.download_url || '#';
     return {
@@ -1389,6 +1411,7 @@ function processPurchaseFromPage() {
   if (total === 0) {
     finalizeOrder({
       buyer: buyerName,
+      buyerId: buyerId,
       items: purchasedItemsWithLicenses,
       total: 0,
       paypal_tx: 'GRATIS'
@@ -1399,6 +1422,7 @@ function processPurchaseFromPage() {
   // Orden pendiente de confirmación
   pendingPaypalOrder = {
     buyer: buyerName,
+    buyerId: buyerId,
     items: purchasedItemsWithLicenses,
     total: total,
     cartLength: cart.length
@@ -1446,6 +1470,7 @@ async function confirmPaypalPayment() {
 
   const orderData = {
     buyer: pendingPaypalOrder.buyer,
+    buyerId: pendingPaypalOrder.buyerId || (currentUser && currentUser.id ? currentUser.id : 'No especificado'),
     items: pendingPaypalOrder.items,
     total: pendingPaypalOrder.total,
     paypal_tx: txId,
