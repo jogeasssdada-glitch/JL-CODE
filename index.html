@@ -2390,16 +2390,16 @@ async function updateLiveStats() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  initParticles();
-  animateParticles();
-  renderProducts();
-  fetchProductsFromCloud(); // Descargar catálogo de la nube JSONBin
-  loadLeaderboard();
-  loadReviews();
-  updateAuthUI();
-  updateCartBadge();
-  renderCartPage();
-  updateLiveStats();
+  try { initParticles(); } catch(e) {}
+  try { animateParticles(); } catch(e) {}
+  try { renderProducts(); } catch(e) {}
+  try { fetchProductsFromCloud(); } catch(e) {}
+  try { loadLeaderboard(); } catch(e) {}
+  try { loadReviews(); } catch(e) {}
+  try { updateAuthUI(); } catch(e) {}
+  try { updateCartBadge(); } catch(e) {}
+  try { renderCartPage(); } catch(e) {}
+  try { updateLiveStats(); } catch(e) {}
 
   // Actualizar estadísticas, productos y podio en tiempo real
   setInterval(() => {
@@ -2497,30 +2497,11 @@ window.addEventListener('hashchange', () => {
     }
   });
 
-  // 3. Proteger arrastre y selección indiscriminada de elementos críticos
+  // 3. Proteger arrastre indiscriminado
   document.addEventListener('dragstart', function(e) {
     e.preventDefault();
     return false;
   });
-
-  // 4. Limpieza periódica y detector de DevTools
-  let devtoolsOpen = false;
-  const element = new Image();
-  Object.defineProperty(element, 'id', {
-    get: function() {
-      devtoolsOpen = true;
-      try {
-        console.clear();
-        console.log("%c⛔ ALERTA DE SEGURIDAD ⛔", "color: #f97316; font-size: 24px; font-weight: bold;");
-        console.log("%cEl acceso no autorizado a este sistema está estrictamente monitoreado y protegido.", "color: #ffffff; font-size: 14px;");
-      } catch(e) {}
-    }
-  });
-
-  setInterval(function() {
-    devtoolsOpen = false;
-    console.dir(element);
-  }, 3000);
 })();
 </script>
 </body>
