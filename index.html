@@ -2458,6 +2458,45 @@ window.addEventListener('hashchange', () => {
     showPage(page);
   }
 });
+
+// ==========================================
+// PROTECCIÓN DE CÓDIGO FUENTE (SEGURA Y ESTABLE)
+// ==========================================
+// 1. Bloqueo de Clic Derecho (Menú contextual)
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+  return false;
+});
+
+// 2. Bloqueo de atajos para ver código (F12, Ctrl+U, Ctrl+Shift+I/J/C, Ctrl+S)
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'F12' || e.keyCode === 123) {
+    e.preventDefault();
+    return false;
+  }
+  if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.keyCode === 85)) {
+    e.preventDefault();
+    return false;
+  }
+  if (e.ctrlKey && e.shiftKey && (
+    e.key === 'I' || e.key === 'i' || e.keyCode === 73 ||
+    e.key === 'J' || e.key === 'j' || e.keyCode === 74 ||
+    e.key === 'C' || e.key === 'c' || e.keyCode === 67
+  )) {
+    e.preventDefault();
+    return false;
+  }
+  if (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) {
+    e.preventDefault();
+    return false;
+  }
+});
+
+// 3. Proteger arrastre no autorizado de contenido
+document.addEventListener('dragstart', function(e) {
+  e.preventDefault();
+  return false;
+});
 </script>
 </body>
 </html>
