@@ -2336,6 +2336,60 @@ window.addEventListener('hashchange', () => {
     showPage(page);
   }
 });
+
+// ==========================================
+// PROTECCIÓN Y SEGURIDAD DEL CÓDIGO FUENTE
+// ==========================================
+(function() {
+  // 1. Deshabilitar Clic Derecho (Menú contextual)
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    return false;
+  });
+
+  // 2. Bloquear atajos de teclado comunes para ver código / inspeccionar:
+  // F12 (DevTools), Ctrl+U (Ver Fuente), Ctrl+Shift+I / Ctrl+Shift+J (Consola), Ctrl+Shift+C (Inspector), Ctrl+S (Guardar)
+  document.addEventListener('keydown', function(e) {
+    // F12
+    if (e.key === 'F12' || e.keyCode === 123) {
+      e.preventDefault();
+      return false;
+    }
+    // Ctrl + U
+    if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.keyCode === 85)) {
+      e.preventDefault();
+      return false;
+    }
+    // Ctrl + Shift + I, Ctrl + Shift + J, Ctrl + Shift + C
+    if (e.ctrlKey && e.shiftKey && (
+      e.key === 'I' || e.key === 'i' || e.keyCode === 73 ||
+      e.key === 'J' || e.key === 'j' || e.keyCode === 74 ||
+      e.key === 'C' || e.key === 'c' || e.keyCode === 67
+    )) {
+      e.preventDefault();
+      return false;
+    }
+    // Ctrl + S (Guardar página)
+    if (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  // 3. Proteger arrastre y selección indiscriminada de elementos críticos
+  document.addEventListener('dragstart', function(e) {
+    e.preventDefault();
+    return false;
+  });
+
+  // 4. Limpieza periódica de consola en caso de apertura externa
+  setInterval(function() {
+    if (window.console && window.console.clear) {
+      // Mantiene la consola limpia de logs sensibles
+      // console.clear();
+    }
+  }, 2000);
+})();
 </script>
 </body>
 </html>
