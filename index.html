@@ -580,7 +580,7 @@ body {
           <span class="text-white">BS</span> <span class="text-orange-500 red-glow">STORE</span>
         </h2>
         <p class="text-gray-300 text-sm md:text-base mb-8 leading-relaxed">
-          <strong class="text-white">BS STORE - RECURSOS PREMIUM, SISTEMAS OPTIMIZADOS Y CÓDIGO LIMPIO PARA TU SERVIDOR</strong>.
+          <strong class="text-white">La tienda líder en FiveM:</strong> Recursos premium exclusivos, sistemas altamente optimizados y código modular garantizado para llevar tu comunidad al siguiente nivel.
         </p>
         <div class="flex flex-col sm:flex-row gap-4">
           <button onclick="showPage('productos')" class="bg-red-600 hover:bg-red-700 text-white font-black px-8 py-4 rounded-xl shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 uppercase tracking-wider cursor-pointer">
@@ -2403,6 +2403,34 @@ window.addEventListener('hashchange', () => {
   const page = window.location.hash ? window.location.hash.replace('#', '') : 'inicio';
   if (['inicio', 'productos', 'carrito', 'mis-productos', 'preguntas', 'admin'].includes(page)) {
     showPage(page);
+  }
+});
+</script>
+
+<!-- CAPA DE SEGURIDAD INDEPENDIENTE (NO TOCA NINGUNA FUNCIÓN DE LA TIENDA) -->
+<script>
+// 1. Bloquear clic derecho para evitar inspeccionar elemento
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+});
+
+// 2. Bloquear atajos para ver código fuente (F12, Ctrl+U, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C)
+document.addEventListener('keydown', function(e) {
+  // F12
+  if (e.key === 'F12' || e.keyCode === 123) {
+    e.preventDefault();
+  }
+  // Ctrl + U
+  if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.keyCode === 85)) {
+    e.preventDefault();
+  }
+  // Ctrl + Shift + I, J, C
+  if (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) {
+    e.preventDefault();
+  }
+  // Ctrl + S (Guardar página)
+  if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+    e.preventDefault();
   }
 });
 </script>
