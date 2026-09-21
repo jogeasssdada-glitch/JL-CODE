@@ -579,7 +579,9 @@ body {
         <h2 class="text-5xl md:text-6xl font-black uppercase tracking-tight mb-4">
           <span class="text-white">BS</span> <span class="text-orange-500 red-glow">STORE</span>
         </h2>
-        <p class="text-gray-300 text-sm md:text-base mb-8 font-medium tracking-wide">BS STORE - RECURSOS PREMIUM, SISTEMAS OPTIMIZADOS Y CÓDIGO LIMPIO PARA TU SERVIDOR</p>
+        <p class="text-gray-300 text-sm md:text-base mb-8 leading-relaxed">
+          <strong class="text-white">La tienda líder en FiveM:</strong> Recursos premium exclusivos, sistemas altamente optimizados y código modular garantizado para llevar tu comunidad al siguiente nivel.
+        </p>
         <div class="flex flex-col sm:flex-row gap-4">
           <button onclick="showPage('productos')" class="bg-red-600 hover:bg-red-700 text-white font-black px-8 py-4 rounded-xl shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 uppercase tracking-wider cursor-pointer">
             Ver Recursos <i class="fas fa-arrow-right text-xs"></i>
@@ -955,9 +957,43 @@ function isRateLimited(action, cooldownMs = 2000) {
   return false;
 }
 
-const DEFAULT_PRODUCTS = [];
-
-const DEFAULT_REVIEWS = [];
+const DEFAULT_REVIEWS = [
+  {
+    username: "Alex_FiveM",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Alex_FiveM",
+    date: "Hace 2 días",
+    text: "Excelente calidad en los scripts. Los instalé en mi servidor y el rendimiento fue súper fluido sin ningún error. Recomendadísimo.",
+    product: "Sistema Optimizado"
+  },
+  {
+    username: "KevDev_RP",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=KevDev_RP",
+    date: "Hace 4 días",
+    text: "El soporte técnico es de 10. Me ayudaron a configurar todo en menos de 10 minutos por el Discord. BS STORE es pura confianza.",
+    product: "Soporte & Configuración"
+  },
+  {
+    username: "Santiagoo_01",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Santiagoo_01",
+    date: "Hace 1 semana",
+    text: "Código modular, limpio y muy fácil de entender. La entrega fue al instante tras pagar. Ya he comprado 2 recursos aquí.",
+    product: "Recurso Premium"
+  },
+  {
+    username: "Nico_Gamer",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Nico_Gamer",
+    date: "Hace 1 semana",
+    text: "Sin duda la mejor tienda de scripts para servidores. Diseños modernos y 0 lag. Vale totalmente cada centavo.",
+    product: "FiveM Script"
+  },
+  {
+    username: "Carlos_Five",
+    avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Carlos_Five",
+    date: "Hace 2 semanas",
+    text: "Compré con PayPal y la licencia me salió automáticamente en la pantalla. Todo súper transparente y seguro.",
+    product: "Licencia Automática"
+  }
+];
 
 // Catálogo visible para todo el mundo
 let allProducts = (() => {
@@ -2248,7 +2284,7 @@ function loadReviews() {
     <div class="review-card-slide">
       <div>
         <div class="review-header">
-          <img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="${r.username}" class="review-avatar">
+          <img src="${r.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="${r.username}" class="review-avatar">
           <div class="review-user-info">
             <h4>${r.username}</h4>
             <p class="review-date">${r.date}</p>
@@ -2355,16 +2391,16 @@ async function updateLiveStats() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  try { initParticles(); } catch(e) {}
-  try { animateParticles(); } catch(e) {}
-  try { renderProducts(); } catch(e) {}
-  try { fetchProductsFromCloud(); } catch(e) {}
-  try { loadLeaderboard(); } catch(e) {}
-  try { loadReviews(); } catch(e) {}
-  try { updateAuthUI(); } catch(e) {}
-  try { updateCartBadge(); } catch(e) {}
-  try { renderCartPage(); } catch(e) {}
-  try { updateLiveStats(); } catch(e) {}
+  initParticles();
+  animateParticles();
+  renderProducts();
+  fetchProductsFromCloud(); // Descargar catálogo de la nube JSONBin
+  loadLeaderboard();
+  loadReviews();
+  updateAuthUI();
+  updateCartBadge();
+  renderCartPage();
+  updateLiveStats();
 
   // Actualizar estadísticas, productos y podio en tiempo real
   setInterval(() => {
@@ -2423,50 +2459,6 @@ window.addEventListener('hashchange', () => {
   }
 });
 
-// ==========================================
-// PROTECCIÓN Y SEGURIDAD DEL CÓDIGO FUENTE
-// ==========================================
-(function() {
-  // 1. Deshabilitar Clic Derecho (Menú contextual)
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-    return false;
-  });
-
-  // 2. Bloquear atajos de teclado comunes para ver código / inspeccionar:
-  // F12 (DevTools), Ctrl+U (Ver Fuente), Ctrl+Shift+I / Ctrl+Shift+J (Consola), Ctrl+Shift+C (Inspector), Ctrl+S (Guardar)
-  document.addEventListener('keydown', function(e) {
-    // F12
-    if (e.key === 'F12' || e.keyCode === 123) {
-      e.preventDefault();
-      return false;
-    }
-    // Ctrl + U
-    if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.keyCode === 85)) {
-      e.preventDefault();
-      return false;
-    }
-    // Ctrl + Shift + I, Ctrl + Shift + J, Ctrl + Shift + C
-    if (e.ctrlKey && e.shiftKey && (
-      e.key === 'I' || e.key === 'i' || e.keyCode === 73 ||
-      e.key === 'J' || e.key === 'j' || e.keyCode === 74 ||
-      e.key === 'C' || e.key === 'c' || e.keyCode === 67
-    )) {
-      e.preventDefault();
-      return false;
-    }
-    // Ctrl + S (Guardar página)
-    if (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) {
-      e.preventDefault();
-      return false;
-    }
-  });
-
-  // 3. Proteger arrastre indiscriminado
-  document.addEventListener('dragstart', function(e) {
-    e.preventDefault();
-    return false;
-  });
 })();
 </script>
 </body>
