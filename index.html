@@ -1724,10 +1724,25 @@ async function confirmDiscordAuthorization() {
   }
 }
 
+// =========================================================================
+// LISTA DE ADMINISTRADORES AUTORIZADOS (5 ESPACIOS DISPONIBLES)
+// Coloca el nombre de usuario de Discord en minúsculas dentro de las comillas.
+// Si no vas a usar un espacio, déjalo vacío '' o no lo toques.
+// =========================================================================
+const ADMIN_USERS_LIST = [
+  'chinito_jl',       // Administrador 1 (Principal)
+  'billonesgangoficial',                 // Administrador 2: Pon aquí el usuario (ej: 'usuario_dos')
+  '',                 // Administrador 3: Pon aquí el usuario (ej: 'usuario_tres')
+  '',                 // Administrador 4: Pon aquí el usuario (ej: 'usuario_cuatro')
+  ''                  // Administrador 5: Pon aquí el usuario (ej: 'usuario_cinco')
+];
+
 function isAdminUser(user) {
   if (!user || !user.username) return false;
   const clean = user.username.toLowerCase().trim().replace(/#0+$/, '');
-  return clean === 'chinito_jl';
+  // Filtra los espacios vacíos y comprueba si el usuario está en la lista
+  const activeAdmins = ADMIN_USERS_LIST.map(adm => adm.toLowerCase().trim()).filter(adm => adm !== '');
+  return activeAdmins.includes(clean);
 }
 
 function logout() {
