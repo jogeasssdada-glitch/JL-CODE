@@ -918,44 +918,12 @@ body {
 </footer>
 
 <script>
-// ==========================================
-// SEGURIDAD & OFUSCACIÓN DE CLAVES DE LA NUBE
-// ==========================================
-// Claves codificadas en Base64 seguro para evitar lectura directa en texto plano
-const _s1 = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTU1MDc2OTA3Mjk5ODk3NzU1OS95Mk5kQTQ0dVgzSUJsWXo1bm5UT0ZtSERYbzRNWGlSWFhyLVJTeHhFWmUzNUc1eG9hVjY0VG0tY2pkdk82Z01rSHJwSQ==";
-const _s2 = "NmFiMDUwOWZhYzYyMTA2MDVhZTNjM2Nm";
-const _s3 = "JDJhJDEwJGNCOFppVU1mMmZGR3M0dGZMWmJsVE9BS0dTVjI0VTJ3c0pBS3RDeERnMG1YQUJodXloOUFX";
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1550769072998977559/y2NdA44uX3IBlYz5nnTOFmHDXo4MXiRZXr-RSxxEZe35G5xoaV64Tm-cjdvO6gMkHrpI";
 
-function _getSec(v) {
-  try { return atob(v); } catch(e) { return ""; }
-}
+const JSONBIN_BIN_ID = "6ab0509fac6210605ae3c3cf";
+const JSONBIN_MASTER_KEY = "$2a$10$cB8ZiUMf2fFGs4tflZblTOAKGSV24U2wsJAKtCxDg0mXABhuyh9AW";
 
-const DISCORD_WEBHOOK_URL = _getSec(_s1);
-const JSONBIN_BIN_ID = _getSec(_s2);
-const JSONBIN_MASTER_KEY = _getSec(_s3);
-
-// Sanitizador contra ataques de inyección XSS
-function sanitizeHTML(str) {
-  if (typeof str !== 'string') return '';
-  return str.replace(/[&<>'"]/g, tag => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    "'": '&#39;',
-    '"': '&quot;'
-  }[tag] || tag));
-}
-
-// Rate limiter / Cooldown anti-spam
-const _lastRequests = {};
-function isRateLimited(action, cooldownMs = 2000) {
-  const now = Date.now();
-  if (_lastRequests[action] && (now - _lastRequests[action]) < cooldownMs) {
-    return true;
-  }
-  _lastRequests[action] = now;
-  return false;
-}
+const DEFAULT_PRODUCTS = [];
 
 const DEFAULT_REVIEWS = [
   {
@@ -1027,20 +995,8 @@ async function fetchProductsFromCloud() {
   }
 }
 
-// Guardar productos en tiempo real a la nube de JSONBin con protección de rol y cooldown
+// Guardar productos en tiempo real a la nube de JSONBin
 async function saveProductsToCloud(productsList) {
-  // Verificación estricta: solo el administrador con sesión desbloqueada puede enviar a la nube
-  if (!isAdminUser(currentUser) || !isAdminUnlocked) {
-    console.warn("Intento no autorizado de modificación en la nube bloqueado.");
-    return false;
-  }
-
-  // Rate limiter: evitar spam de peticiones a la nube (mínimo 1.5 segundos entre llamadas)
-  if (isRateLimited('save_cloud', 1500)) {
-    showToast('⏳ Espera un momento antes de volver a guardar', 'warning');
-    return false;
-  }
-
   try {
     const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
       method: 'PUT',
@@ -1325,23 +1281,14 @@ function generateLicenseKey(prefix = 'BS') {
 }
 
 async function sendDiscordWebhook(orderData) {
-  // Protección anti-spam de Webhook (cooldown de 3 segundos entre envíos)
-  if (isRateLimited('discord_webhook', 3000)) {
-    console.warn("Llamada de Webhook bloqueada por rate limiting");
-    return false;
-  }
-
   try {
-    const cleanBuyer = sanitizeHTML(orderData.buyer || 'Cliente Discord');
-    const cleanTx = sanitizeHTML(orderData.paypal_tx || 'Verificado');
-
     const embed = {
       title: "🛒 Nueva Compra Realizada en BS STORE",
       color: 16348438, // Naranja cálido BS STORE (#f97316)
       fields: [
         {
           name: "👤 Cliente / Discord",
-          value: `**${cleanBuyer}**`,
+          value: `**${orderData.buyer || 'Cliente Discord'}**`,
           inline: true
         },
         {
@@ -1351,12 +1298,12 @@ async function sendDiscordWebhook(orderData) {
         },
         {
           name: "💳 Método de Pago",
-          value: `PayPal (TX: \`${cleanTx}\`)`,
+          value: orderData.paypal_tx ? `PayPal (TX: \`${orderData.paypal_tx}\`)` : 'PayPal / Verificado',
           inline: true
         },
         {
           name: "📦 Productos y Licencias",
-          value: orderData.items.map(p => `• **${sanitizeHTML(p.name)}** (${p.price === 0 ? 'GRATIS' : '$' + Number(p.price).toFixed(2)})\n  🔑 Licencia: \`${p.license}\``).join('\n\n'),
+          value: orderData.items.map(p => `• **${p.name}** (${p.price === 0 ? 'GRATIS' : '$' + Number(p.price).toFixed(2)})\n  🔑 Licencia: \`${p.license}\``).join('\n\n'),
           inline: false
         },
         {
@@ -2457,45 +2404,6 @@ window.addEventListener('hashchange', () => {
   if (['inicio', 'productos', 'carrito', 'mis-productos', 'preguntas', 'admin'].includes(page)) {
     showPage(page);
   }
-});
-
-// ==========================================
-// PROTECCIÓN DE CÓDIGO FUENTE (SEGURA Y ESTABLE)
-// ==========================================
-// 1. Bloqueo de Clic Derecho (Menú contextual)
-document.addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-  return false;
-});
-
-// 2. Bloqueo de atajos para ver código (F12, Ctrl+U, Ctrl+Shift+I/J/C, Ctrl+S)
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'F12' || e.keyCode === 123) {
-    e.preventDefault();
-    return false;
-  }
-  if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.keyCode === 85)) {
-    e.preventDefault();
-    return false;
-  }
-  if (e.ctrlKey && e.shiftKey && (
-    e.key === 'I' || e.key === 'i' || e.keyCode === 73 ||
-    e.key === 'J' || e.key === 'j' || e.keyCode === 74 ||
-    e.key === 'C' || e.key === 'c' || e.keyCode === 67
-  )) {
-    e.preventDefault();
-    return false;
-  }
-  if (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) {
-    e.preventDefault();
-    return false;
-  }
-});
-
-// 3. Proteger arrastre no autorizado de contenido
-document.addEventListener('dragstart', function(e) {
-  e.preventDefault();
-  return false;
 });
 </script>
 </body>
