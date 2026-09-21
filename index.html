@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta http-equiv="X-XSS-Protection" content="1; mode=block">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>JL CODE - Tienda de Scripts</title>
 <link rel="icon" type="image/png" href="logo.png">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -908,10 +911,44 @@ body {
 </footer>
 
 <script>
-const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1550769072998977559/y2NdA44uX3IBlYz5nnTOFmHDXo4MXiRZXr-RSxxEZe35G5xoaV64Tm-cjdvO6gMkHrpI";
+// ==========================================
+// SEGURIDAD & OFUSCACIÓN DE CLAVES DE LA NUBE
+// ==========================================
+// Claves codificadas en Base64 seguro para evitar lectura directa en texto plano
+const _s1 = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTU1MDc2OTA3Mjk5ODk3NzU1OS95Mk5kQTQ0dVgzSUJsWXo1bm5UT0ZtSERYbzRNWGlSWFhyLVJTeHhFWmUzNUc1eG9hVjY0VG0tY2pkdk82Z01rSHJwSQ==";
+const _s2 = "NmFiMDUwOWZhYzYyMTA2MDVhZTNjM2Nm";
+const _s3 = "JDJhJDEwJGNCOFppVU1mMmZGR3M0dGZMWmJsVE9BS0dTVjI0VTJ3c0pBS3RDeERnMG1YQUJodXloOUFX";
 
-const JSONBIN_BIN_ID = "6ab0509fac6210605ae3c3cf";
-const JSONBIN_MASTER_KEY = "$2a$10$cB8ZiUMf2fFGs4tflZblTOAKGSV24U2wsJAKtCxDg0mXABhuyh9AW";
+function _getSec(v) {
+  try { return atob(v); } catch(e) { return ""; }
+}
+
+const DISCORD_WEBHOOK_URL = _getSec(_s1);
+const JSONBIN_BIN_ID = _getSec(_s2);
+const JSONBIN_MASTER_KEY = _getSec(_s3);
+
+// Sanitizador contra ataques de inyección XSS
+function sanitizeHTML(str) {
+  if (typeof str !== 'string') return '';
+  return str.replace(/[&<>'"]/g, tag => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;'
+  }[tag] || tag));
+}
+
+// Rate limiter / Cooldown anti-spam
+const _lastRequests = {};
+function isRateLimited(action, cooldownMs = 2000) {
+  const now = Date.now();
+  if (_lastRequests[action] && (now - _lastRequests[action]) < cooldownMs) {
+    return true;
+  }
+  _lastRequests[action] = now;
+  return false;
+}
 
 const DEFAULT_PRODUCTS = [];
 
@@ -949,8 +986,20 @@ async function fetchProductsFromCloud() {
   }
 }
 
-// Guardar productos en tiempo real a la nube de JSONBin
+// Guardar productos en tiempo real a la nube de JSONBin con protección de rol y cooldown
 async function saveProductsToCloud(productsList) {
+  // Verificación estricta: solo el administrador con sesión desbloqueada puede enviar a la nube
+  if (!isAdminUser(currentUser) || !isAdminUnlocked) {
+    console.warn("Intento no autorizado de modificación en la nube bloqueado.");
+    return false;
+  }
+
+  // Rate limiter: evitar spam de peticiones a la nube (mínimo 1.5 segundos entre llamadas)
+  if (isRateLimited('save_cloud', 1500)) {
+    showToast('⏳ Espera un momento antes de volver a guardar', 'warning');
+    return false;
+  }
+
   try {
     const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
       method: 'PUT',
@@ -1235,14 +1284,23 @@ function generateLicenseKey(prefix = 'JL') {
 }
 
 async function sendDiscordWebhook(orderData) {
+  // Protección anti-spam de Webhook (cooldown de 3 segundos entre envíos)
+  if (isRateLimited('discord_webhook', 3000)) {
+    console.warn("Llamada de Webhook bloqueada por rate limiting");
+    return false;
+  }
+
   try {
+    const cleanBuyer = sanitizeHTML(orderData.buyer || 'Cliente Discord');
+    const cleanTx = sanitizeHTML(orderData.paypal_tx || 'Verificado');
+
     const embed = {
       title: "🛒 Nueva Compra Realizada en JL CODE",
-      color: 16711680,
+      color: 16348438, // Naranja cálido JL CODE (#f97316)
       fields: [
         {
           name: "👤 Cliente / Discord",
-          value: `**${orderData.buyer}**`,
+          value: `**${cleanBuyer}**`,
           inline: true
         },
         {
@@ -1252,12 +1310,12 @@ async function sendDiscordWebhook(orderData) {
         },
         {
           name: "💳 Método de Pago",
-          value: orderData.paypal_tx ? `PayPal (TX: \`${orderData.paypal_tx}\`)` : 'PayPal / Verificado',
+          value: `PayPal (TX: \`${cleanTx}\`)`,
           inline: true
         },
         {
           name: "📦 Productos y Licencias",
-          value: orderData.items.map(p => `• **${p.name}** (${p.price === 0 ? 'GRATIS' : '$' + Number(p.price).toFixed(2)})\n  🔑 Licencia: \`${p.license}\``).join('\n\n'),
+          value: orderData.items.map(p => `• **${sanitizeHTML(p.name)}** (${p.price === 0 ? 'GRATIS' : '$' + Number(p.price).toFixed(2)})\n  🔑 Licencia: \`${p.license}\``).join('\n\n'),
           inline: false
         },
         {
@@ -1268,7 +1326,7 @@ async function sendDiscordWebhook(orderData) {
       ],
       footer: {
         text: "JL CODE - Sistema de Notificaciones de Ventas",
-        icon_url: "https://xfcode.xyz/files/XF_LOGO.png"
+        icon_url: "logo.png"
       }
     };
 
@@ -1277,7 +1335,7 @@ async function sendDiscordWebhook(orderData) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         username: "JL CODE Ventas",
-        avatar_url: "https://xfcode.xyz/files/XF_LOGO.png",
+        avatar_url: "logo.png",
         embeds: [embed]
       })
     });
@@ -1751,22 +1809,66 @@ function closeAdminPinModal() {
   if (modal) modal.classList.add('hidden');
 }
 
-function verifyAdminPin(event) {
+// Función para calcular hash SHA-256
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Hash SHA-256 de la clave "1.0"
+const ADMIN_PIN_HASH = "80562e8ee1c3d183f3957eb6a95f87b8f041b312db8038b34005b8a53e34b7f3";
+let failedAttempts = parseInt(localStorage.getItem('jlcode_admin_failed') || '0', 10);
+let lockoutUntil = parseInt(localStorage.getItem('jlcode_admin_lockout') || '0', 10);
+
+async function verifyAdminPin(event) {
   if (event) event.preventDefault();
+  const now = Date.now();
+  
+  // 1. Verificar si está en tiempo de bloqueo por intentos fallidos
+  if (lockoutUntil > now) {
+    const remainingSeconds = Math.ceil((lockoutUntil - now) / 1000);
+    showToast(`⚠️ Acceso temporalmente bloqueado por seguridad. Espera ${remainingSeconds} segundos.`, 'warning');
+    return;
+  }
+
   const input = document.getElementById('admin-pin-input');
   const enteredPin = input ? input.value.trim() : '';
 
-  if (enteredPin === '1.0') {
+  if (!enteredPin) return;
+
+  const enteredHash = await sha256(enteredPin);
+
+  if (enteredHash === ADMIN_PIN_HASH) {
+    // Éxito: restablecer intentos fallidos
+    failedAttempts = 0;
+    localStorage.removeItem('jlcode_admin_failed');
+    localStorage.removeItem('jlcode_admin_lockout');
+
     isAdminUnlocked = true;
     sessionStorage.setItem('jlcode_admin_unlocked', 'true');
     closeAdminPinModal();
-    showToast('🔓 Acceso verificado correctamente', 'success');
+    showToast('🔓 Acceso de administrador verificado', 'success');
     showPage('admin', true);
   } else {
-    showToast('❌ Contraseña incorrecta', 'warning');
-    if (input) {
-      input.value = '';
-      input.focus();
+    // Fallo: sumar intento fallido
+    failedAttempts++;
+    localStorage.setItem('jlcode_admin_failed', failedAttempts.toString());
+
+    if (failedAttempts >= 4) {
+      // Bloquear acceso durante 5 minutos tras 4 fallos seguidos
+      lockoutUntil = Date.now() + (5 * 60 * 1000);
+      localStorage.setItem('jlcode_admin_lockout', lockoutUntil.toString());
+      showToast('🚨 Demasiados intentos fallidos. Panel bloqueado por 5 minutos.', 'error');
+      closeAdminPinModal();
+    } else {
+      const remaining = 4 - failedAttempts;
+      showToast(`❌ Clave incorrecta. Te quedan ${remaining} intento(s).`, 'warning');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
     }
   }
 }
@@ -2382,13 +2484,24 @@ window.addEventListener('hashchange', () => {
     return false;
   });
 
-  // 4. Limpieza periódica de consola en caso de apertura externa
-  setInterval(function() {
-    if (window.console && window.console.clear) {
-      // Mantiene la consola limpia de logs sensibles
-      // console.clear();
+  // 4. Limpieza periódica y detector de DevTools
+  let devtoolsOpen = false;
+  const element = new Image();
+  Object.defineProperty(element, 'id', {
+    get: function() {
+      devtoolsOpen = true;
+      try {
+        console.clear();
+        console.log("%c⛔ ALERTA DE SEGURIDAD ⛔", "color: #f97316; font-size: 24px; font-weight: bold;");
+        console.log("%cEl acceso no autorizado a este sistema está estrictamente monitoreado y protegido.", "color: #ffffff; font-size: 14px;");
+      } catch(e) {}
     }
-  }, 2000);
+  });
+
+  setInterval(function() {
+    devtoolsOpen = false;
+    console.dir(element);
+  }, 3000);
 })();
 </script>
 </body>
