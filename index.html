@@ -51,6 +51,19 @@ vercel-live-feedback, #__vercel-toolbar, [data-vercel-toolbar], div[class*="verc
   visibility: hidden !important;
   pointer-events: none !important;
 }
+/* Bloquear arrastre y robo de imágenes y logos */
+img {
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  pointer-events: auto;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   background-color: #0b0704;
@@ -2433,6 +2446,14 @@ document.addEventListener('keydown', function(e) {
   // Ctrl + S (Guardar página)
   if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
     e.preventDefault();
+  }
+});
+
+// 3. Bloquear completamente el arrastre de imágenes y logos al navegador
+document.addEventListener('dragstart', function(e) {
+  if (e.target.nodeName === 'IMG' || e.target.tagName === 'IMG') {
+    e.preventDefault();
+    return false;
   }
 });
 </script>
