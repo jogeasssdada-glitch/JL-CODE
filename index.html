@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JL CODE - Tienda de Scripts</title>
-<link rel="icon" type="image/png" href="https://xfcode.xyz/files/XF_LOGO.png">
+<link rel="icon" type="image/png" href="logo.png">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = {
@@ -12,9 +12,14 @@ tailwind.config = {
     extend: {
       colors: {
         red: {
-          50: '#fff5f5', 100: '#ffe0e0', 200: '#ffb3b3', 300: '#ff8080',
-          400: '#ff4040', 500: '#ff0000', 600: '#e60000', 700: '#cc0000',
-          800: '#b30000', 900: '#990000', 950: '#660000'
+          50: '#fffaf5', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74',
+          400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c',
+          800: '#9a3412', 900: '#7c2d12', 950: '#431407'
+        },
+        orange: {
+          50: '#fffaf5', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74',
+          400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c',
+          800: '#9a3412', 900: '#7c2d12', 950: '#431407'
         }
       }
     }
@@ -24,52 +29,53 @@ tailwind.config = {
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 :root {
-  --bg-body: #050507;
-  --bg-card: rgba(20, 10, 10, 0.6);
-  --primary: #ff0000;
-  --text-muted: #9496a1;
-  --text-dim: #6b7280;
-  --border-color: rgba(255, 0, 0, 0.15);
+  --bg-body: #0b0704;
+  --bg-card: rgba(22, 14, 8, 0.65);
+  --primary: #f97316;
+  --primary-glow: rgba(249, 115, 22, 0.45);
+  --text-muted: #a39e99;
+  --text-dim: #736d67;
+  --border-color: rgba(249, 115, 22, 0.2);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  background-color: #050507;
-  color: #f3f4f6;
+  background-color: #0b0704;
+  color: #f5f2eb;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
 }
 .bg-mesh {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; overflow: hidden; pointer-events: none;
-  background: radial-gradient(ellipse at top, rgba(255,26,26,0.15) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(255,26,26,0.1) 0%, transparent 50%);
+  background: radial-gradient(ellipse at top, rgba(249, 115, 22, 0.12) 0%, transparent 55%), radial-gradient(ellipse at bottom right, rgba(234, 88, 12, 0.08) 0%, transparent 50%);
 }
-.mesh-blob { position: absolute; filter: blur(90px); opacity: 0.25; animation: float 10s infinite ease-in-out; }
-.blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, #ff0000, transparent); }
-.blob-2 { bottom: -10%; right: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, #cc0000, transparent); animation-delay: -5s; }
-.blob-3 { top: 50%; left: 50%; width: 40vw; height: 40vw; background: radial-gradient(circle, #ff4040, transparent); animation-delay: -2.5s; opacity: 0.15; }
-@keyframes float { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(30px, 30px) scale(1.1); } }
+.mesh-blob { position: absolute; filter: blur(95px); opacity: 0.22; animation: float 12s infinite ease-in-out; }
+.blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, #f97316, transparent); }
+.blob-2 { bottom: -10%; right: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, #ea580c, transparent); animation-delay: -6s; }
+.blob-3 { top: 50%; left: 50%; width: 40vw; height: 40vw; background: radial-gradient(circle, #fb923c, transparent); animation-delay: -3s; opacity: 0.12; }
+@keyframes float { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(30px, 30px) scale(1.08); } }
 #particles-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
 ::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: #111111; }
-::-webkit-scrollbar-thumb { background: #6e6e6e; border-radius: 5px; border: 2px solid #111111; }
-::-webkit-scrollbar-thumb:hover { background: #858585; }
-.red-glow { text-shadow: 0 0 18px rgba(255, 0, 0, 0.85), 0 0 36px rgba(204, 27, 27, 0.4); }
-.red-border { border-color: rgba(255, 0, 0, 0.25); }
+::-webkit-scrollbar-track { background: #0e0a07; }
+::-webkit-scrollbar-thumb { background: #523e30; border-radius: 5px; border: 2px solid #0e0a07; }
+::-webkit-scrollbar-thumb:hover { background: #7c5c46; }
+.red-glow { text-shadow: 0 0 16px rgba(249, 115, 22, 0.75), 0 0 32px rgba(234, 88, 12, 0.35); }
+.red-border { border-color: rgba(249, 115, 22, 0.25); }
 .page { display: none !important; }
 .page.active { display: block !important; }
-.nav-link.active-page { color: #ff5555; border-bottom: 2px solid #ff0000; padding-bottom: 2px; }
+.nav-link.active-page { color: #fb923c; border-bottom: 2px solid #f97316; padding-bottom: 2px; }
 .cart-badge {
-  position: absolute; top: -8px; right: -8px; background: #ff0000; color: white; border-radius: 50%;
+  position: absolute; top: -8px; right: -8px; background: #f97316; color: white; border-radius: 50%;
   width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: bold; animation: bounce 0.3s ease;
+  font-size: 11px; font-weight: bold; animation: bounce 0.3s ease; box-shadow: 0 2px 8px rgba(249, 115, 22, 0.5);
 }
 @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
 .gallery-main-image { width: 100%; height: 400px; object-fit: cover; border-radius: 16px; background: #111; }
 .gallery-thumbnails { display: flex; gap: 10px; margin-top: 15px; overflow-x: auto; padding: 5px; }
 .gallery-thumbnail { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.3s; flex-shrink: 0; }
-.gallery-thumbnail:hover { border-color: #e60000; transform: scale(1.05); }
-.gallery-thumbnail.active { border-color: #e60000; box-shadow: 0 0 10px rgba(230, 0, 0, 0.5); }
-.gallery-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(230, 0, 0, 0.8); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+.gallery-thumbnail:hover { border-color: #ea580c; transform: scale(1.05); }
+.gallery-thumbnail.active { border-color: #f97316; box-shadow: 0 0 10px rgba(249, 115, 22, 0.4); }
+.gallery-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(234, 88, 12, 0.85); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
 .gallery-nav.prev { left: 10px; }
 .gallery-nav.next { right: 10px; }
 
@@ -80,55 +86,55 @@ body {
 .filter-panel-overlay.active { opacity: 1; pointer-events: auto; display: block; }
 .filter-panel {
   position: fixed; top: 0; right: -400px; width: 350px; height: 100vh;
-  background: linear-gradient(180deg, #150a0a 0%, #0a0505 100%);
-  border-left: 1px solid rgba(255, 0, 0, 0.3); box-shadow: -10px 0 40px rgba(0,0,0,0.8);
+  background: linear-gradient(180deg, #140d07 0%, #0c0805 100%);
+  border-left: 1px solid rgba(249, 115, 22, 0.3); box-shadow: -10px 0 40px rgba(0,0,0,0.8);
   z-index: 101; transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 24px; overflow-y: auto;
 }
 .filter-panel.active { right: 0; }
 .filter-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 24px; }
 .filter-header h3 { color: white; font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
-.filter-close-btn { background: transparent; border: none; color: #9496a1; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; }
+.filter-close-btn { background: transparent; border: none; color: #a39e99; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; }
 .filter-section { margin-bottom: 28px; }
-.filter-section-title { color: #9496a1; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+.filter-section-title { color: #a39e99; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
 .category-checkbox {
   display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 8px;
-  background: rgba(255,255,200,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; cursor: pointer;
+  background: rgba(255, 235, 210, 0.03); border: 1px solid rgba(249, 115, 22, 0.15); border-radius: 10px; cursor: pointer;
 }
-.category-checkbox input[type="checkbox"] { width: 18px; height: 18px; accent-color: #ff0000; }
-.filter-clear-btn { width: 100%; background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 0, 0, 0.3); color: #ff0000; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+.category-checkbox input[type="checkbox"] { width: 18px; height: 18px; accent-color: #f97316; }
+.filter-clear-btn { width: 100%; background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.3); color: #fb923c; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; }
 
 .user-panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
 .user-panel-overlay.active { opacity: 1; pointer-events: auto; }
-.user-panel { position: fixed; top: 0; right: -420px; left: auto; width: 340px; height: 100vh; background: #0c0606; border-left: 1px solid rgba(255, 0, 0, 0.25); box-shadow: -15px 0 50px rgba(0,0,0,0.9); z-index: 101; transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1); padding: 28px 20px; overflow-y: auto; display: flex; flex-direction: column; }
+.user-panel { position: fixed; top: 0; right: -420px; left: auto; width: 340px; height: 100vh; background: #0f0a06; border-left: 1px solid rgba(249, 115, 22, 0.25); box-shadow: -15px 0 50px rgba(0,0,0,0.9); z-index: 101; transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1); padding: 28px 20px; overflow-y: auto; display: flex; flex-direction: column; }
 .user-panel.active { right: 0; }
 .user-panel-header { text-align: center; margin-bottom: 24px; position: relative; }
 .user-panel-avatar-wrap { position: relative; width: 100px; height: 100px; margin: 0 auto 14px; }
-.user-panel-avatar { width: 100%; height: 100%; border-radius: 50%; border: 3px solid #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.6); object-fit: cover; }
+.user-panel-avatar { width: 100%; height: 100%; border-radius: 50%; border: 3px solid #f97316; box-shadow: 0 0 25px rgba(249, 115, 22, 0.5); object-fit: cover; }
 .user-panel-name { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 8px; letter-spacing: 0.5px; }
 .user-panel-role { display: inline-block; padding: 4px 18px; background: rgba(0, 255, 68, 0.12); border: 1.5px solid #00ff44; color: #00ff44; border-radius: 9999px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 .user-panel-divider { height: 1px; background: rgba(255, 255, 255, 0.07); margin: 20px 0; }
-.user-panel-card-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin-bottom: 10px; background: #140808; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; cursor: pointer; transition: all 0.2s; text-decoration: none; color: inherit; }
-.user-panel-card-item:hover { background: #1a0a0a; border-color: rgba(255, 0, 0, 0.4); transform: translateY(-2px); }
-.user-panel-card-icon { width: 40px; height: 40px; border-radius: 12px; background: #260a0a; color: #ff2222; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+.user-panel-card-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin-bottom: 10px; background: #170f09; border: 1px solid rgba(249, 115, 22, 0.12); border-radius: 16px; cursor: pointer; transition: all 0.2s; text-decoration: none; color: inherit; }
+.user-panel-card-item:hover { background: #22140a; border-color: rgba(249, 115, 22, 0.4); transform: translateY(-2px); }
+.user-panel-card-icon { width: 40px; height: 40px; border-radius: 12px; background: #2e1809; color: #fb923c; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
 .user-panel-card-text h4 { margin: 0; font-size: 14px; font-weight: 800; color: #fff; }
-.user-panel-card-text p { margin: 2px 0 0; font-size: 11px; color: #8a8d98; }
+.user-panel-card-text p { margin: 2px 0 0; font-size: 11px; color: #a39e99; }
 .user-panel-footer { margin-top: auto; padding-top: 16px; }
-.logout-card-btn { width: 100%; padding: 14px; background: #200808; border: 1px solid rgba(255, 0, 0, 0.5); color: #ff3333; border-radius: 14px; font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.logout-card-btn:hover { background: #350c0c; color: #ff6666; border-color: #ff0000; }
-.nav-user-pill { display: flex; align-items: center; gap: 10px; background: #110505; border: 1.5px solid rgba(255, 0, 0, 0.5); border-radius: 9999px; padding: 4px 14px 4px 5px; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 15px rgba(255,0,0,0.15); }
-.nav-user-pill:hover { border-color: #ff2222; box-shadow: 0 0 20px rgba(255,0,0,0.35); }
-.nav-user-avatar { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #ff0000; object-fit: cover; }
-.nav-exit-btn { background: #140606; border: 1px solid rgba(255, 0, 0, 0.4); color: #ff3333; border-radius: 10px; padding: 6px 14px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; }
-.nav-exit-btn:hover { background: #240808; color: #ff5555; border-color: #ff2222; }
+.logout-card-btn { width: 100%; padding: 14px; background: #221108; border: 1px solid rgba(249, 115, 22, 0.4); color: #fb923c; border-radius: 14px; font-weight: 800; font-size: 13px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.logout-card-btn:hover { background: #331a0b; color: #ffedd5; border-color: #f97316; }
+.nav-user-pill { display: flex; align-items: center; gap: 10px; background: #160e08; border: 1.5px solid rgba(249, 115, 22, 0.4); border-radius: 9999px; padding: 4px 14px 4px 5px; cursor: pointer; transition: all 0.2s; box-shadow: 0 0 15px rgba(249, 115, 22, 0.15); }
+.nav-user-pill:hover { border-color: #fb923c; box-shadow: 0 0 20px rgba(249, 115, 22, 0.35); }
+.nav-user-avatar { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #f97316; object-fit: cover; }
+.nav-exit-btn { background: #1a0f07; border: 1px solid rgba(249, 115, 22, 0.35); color: #fb923c; border-radius: 10px; padding: 6px 14px; font-size: 12px; font-weight: 700; display: flex; align-items: gap 6px; cursor: pointer; transition: all 0.2s; }
+.nav-exit-btn:hover { background: #2d1809; color: #fed7aa; border-color: #f97316; }
 
 .reviews-section {
   padding: 80px 0; position: relative; overflow: hidden; width: 100vw; margin-left: calc(50% - 50vw);
-  background: linear-gradient(to bottom, transparent, rgba(20, 10, 10, 0.4), transparent);
+  background: linear-gradient(to bottom, transparent, rgba(30, 18, 10, 0.4), transparent);
 }
 .reviews-container { max-width: 1200px; margin: 0 auto; position: relative; padding: 0 20px; }
 .reviews-title { text-align: center; margin-bottom: 50px; position: relative; z-index: 10; padding: 10px 0; }
 .reviews-title h2 { font-size: 2.5rem; font-weight: 900; color: white; margin-bottom: 15px; }
-.reviews-title h2 span { color: var(--primary); text-shadow: 0 0 20px rgba(255, 0, 0, 0.5); }
+.reviews-title h2 span { color: var(--primary); text-shadow: 0 0 20px rgba(249, 115, 22, 0.5); }
 .reviews-title p { color: var(--text-muted); font-size: 1.1rem; }
 .reviews-slider-wrapper {
   position: relative; width: 100%; overflow: hidden;
@@ -144,15 +150,15 @@ body {
   border-radius: 20px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between;
   backdrop-filter: blur(10px); transition: transform 0.3s ease, border-color 0.3s ease;
 }
-.review-card-slide:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(255, 0, 0, 0.1); }
+.review-card-slide:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(249, 115, 22, 0.15); }
 .review-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
 .review-avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; }
 .review-user-info h4 { color: white; font-weight: 700; font-size: 1.1rem; margin: 0; }
 .review-date { color: var(--text-dim); font-size: 0.8rem; margin-top: 2px; }
 .review-stars { color: #fbbf24; font-size: 1rem; margin-bottom: 15px; letter-spacing: 2px; }
 .review-text { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px; flex-grow: 1; }
-.review-product-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #ffffff; padding: 8px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 600; width: fit-content; }
-.review-product-tag i { color: #ff0000; }
+.review-product-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(249, 115, 22, 0.12); border: 1px solid rgba(249, 115, 22, 0.25); color: #fed7aa; padding: 8px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 600; width: fit-content; }
+.review-product-tag i { color: #f97316; }
 
 .leaderboard-section { padding: 40px 0 60px 0; position: relative; z-index: 5; }
 .podium-container { display: flex; justify-content: center; align-items: flex-end; gap: 20px; max-width: 900px; margin: 0 auto; padding: 0 20px; }
@@ -162,13 +168,13 @@ body {
   transition: transform 0.3s ease, border-color 0.3s ease; width: 100%; max-width: 260px;
   display: flex; flex-direction: column; align-items: center;
 }
-.podium-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(255, 0, 0, 0.15); }
-.rank-1 { order: 2; transform: scale(1.1); z-index: 10; border-color: rgba(255, 0, 0, 0.5); box-shadow: 0 0 25px rgba(255, 0, 0, 0.2); }
+.podium-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(249, 115, 22, 0.15); }
+.rank-1 { order: 2; transform: scale(1.1); z-index: 10; border-color: rgba(249, 115, 22, 0.5); box-shadow: 0 0 25px rgba(249, 115, 22, 0.2); }
 .rank-1:hover { transform: scale(1.12); }
 .rank-2 { order: 1; opacity: 0.9; margin-bottom: 20px; }
 .rank-3 { order: 3; opacity: 0.9; margin-bottom: 20px; }
 .rank-badge {
-  width: 36px; height: 36px; background: #1a1a1a; border: 2px solid #444;
+  width: 36px; height: 36px; background: #1a1510; border: 2px solid #554433;
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-weight: 900; color: white; font-size: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   position: absolute; top: -10px; left: 50%; transform: translateX(-50%); z-index: 5;
@@ -177,19 +183,19 @@ body {
 .rank-2 .rank-badge { background: linear-gradient(135deg, #e0e0e0, #9e9e9e); border-color: #e0e0e0; color: black; }
 .rank-3 .rank-badge { background: linear-gradient(135deg, #cd7f32, #8b4513); border-color: #cd7f32; color: white; }
 .podium-avatar {
-  width: 80px; height: 80px; border-radius: 50%; border: 3px solid #333; object-fit: cover;
+  width: 80px; height: 80px; border-radius: 50%; border: 3px solid #443322; object-fit: cover;
   margin-top: 15px; margin-bottom: 12px; background: #000;
 }
-.rank-1 .podium-avatar { width: 100px; height: 100px; border-color: #ff0000; box-shadow: 0 0 15px rgba(255, 0, 0, 0.4); margin-top: 20px; }
+.rank-1 .podium-avatar { width: 100px; height: 100px; border-color: #f97316; box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); margin-top: 20px; }
 .podium-name { color: white; font-weight: 700; font-size: 1.1rem; margin-bottom: 0; }
 .rank-1 .podium-name { font-size: 1.25rem; margin-bottom: 5px; }
 .podium-stats {
   display: flex; flex-direction: column; align-items: center; background: rgba(255, 255, 255, 0.03);
   padding: 10px 15px; border-radius: 12px; margin-top: auto; width: 100%; border: 1px solid rgba(255, 255, 255, 0.05);
 }
-.stat-number { color: #ff0000; font-weight: 900; font-size: 1.5rem; line-height: 1; }
+.stat-number { color: #f97316; font-weight: 900; font-size: 1.5rem; line-height: 1; }
 .rank-1 .stat-number { font-size: 1.8rem; }
-.stat-label { color: #9496a1; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-top: 4px; }
+.stat-label { color: #a39e99; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-top: 4px; }
 
 @media (max-width: 768px) {
   .podium-container { flex-direction: column; align-items: center; }
@@ -200,7 +206,7 @@ body {
 }
 </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between bg-gradient-to-b from-[#150a0a] to-[#0a0505] relative">
+<body class="min-h-screen flex flex-col justify-between bg-gradient-to-b from-[#140d07] via-[#0d0905] to-[#080503] relative">
 <div class="bg-mesh">
   <div class="mesh-blob blob-1"></div>
   <div class="mesh-blob blob-2"></div>
@@ -214,14 +220,12 @@ body {
   <div id="discord-oauth-card-1" class="max-w-md w-full bg-[#120707] border border-red-900/60 rounded-3xl p-8 text-center shadow-[0_0_60px_rgba(255,0,0,0.25)] relative">
     <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="fas fa-times text-xl"></i></button>
     
-    <!-- Logo con borde neon rojo -->
+    <!-- Logo con borde neon naranja -->
     <div class="relative w-20 h-20 mx-auto mb-6">
-      <div class="w-full h-full rounded-2xl bg-gradient-to-br from-red-600 to-red-950 flex items-center justify-center border-2 border-red-500 shadow-[0_0_25px_rgba(255,0,0,0.5)] text-white font-black text-3xl">
-        JL
-      </div>
+      <img src="logo.png" alt="JL CODE" class="w-full h-full rounded-2xl object-cover border-2 border-orange-500 shadow-[0_0_25px_rgba(249,115,22,0.5)]">
     </div>
 
-    <h1 class="text-3xl font-black text-white mb-3 tracking-wide uppercase">JL <span class="text-red-500">CODE</span></h1>
+    <h1 class="text-3xl font-black text-white mb-3 tracking-wide uppercase">JL <span class="text-orange-500">CODE</span></h1>
     <p class="text-gray-400 text-xs md:text-sm mb-6 leading-relaxed">
       Inicia sesión con Discord para acceder a tus compras, descargar recursos y gestionar licencias.
     </p>
@@ -247,9 +251,7 @@ body {
 
     <!-- Avatares conectados exactamente al screenshot -->
     <div class="flex items-center justify-center gap-4 mb-4">
-      <div class="w-16 h-16 rounded-full bg-gradient-to-br from-red-600 to-red-950 border-2 border-red-500 flex items-center justify-center font-black text-white text-xl shadow-lg">
-        JL
-      </div>
+      <img src="logo.png" alt="JL CODE" class="w-16 h-16 rounded-full border-2 border-orange-500 object-cover shadow-lg">
       <div class="flex items-center gap-1 opacity-60">
         <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
         <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
@@ -363,7 +365,7 @@ body {
   <div class="max-w-sm w-full bg-[#120707] border border-red-700/60 rounded-3xl p-7 text-center shadow-[0_0_50px_rgba(255,0,0,0.3)] relative">
     <button onclick="closeAdminPinModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white cursor-pointer"><i class="fas fa-times text-lg"></i></button>
 
-    <div class="w-14 h-14 mx-auto rounded-2xl mb-4 bg-gradient-to-br from-red-600 to-red-950 flex items-center justify-center border border-red-500 shadow-lg text-white text-2xl">
+    <div class="w-14 h-14 mx-auto rounded-2xl mb-4 bg-gradient-to-br from-orange-500 to-amber-700 flex items-center justify-center border border-orange-400 shadow-[0_0_20px_rgba(249,115,22,0.4)] text-white text-2xl">
       <i class="fas fa-lock"></i>
     </div>
 
@@ -514,9 +516,9 @@ body {
 <!-- ENCABEZADO Y BARRA SUPERIOR -->
 <div id="main-content" class="relative z-10 flex-grow flex flex-col">
   <header class="bg-[#0d0505]/90 backdrop-blur border-b red-border sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-    <div class="flex items-center gap-3 cursor-pointer" onclick="showPage('inicio')">
-      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-red-600 to-red-950 flex items-center justify-center font-black text-white text-base shadow-md border border-red-500">JL</div>
-      <span class="text-white font-black tracking-widest text-lg">JL <span class="text-red-400">CODE</span></span>
+    <div class="flex items-center gap-3 cursor-pointer group" onclick="showPage('inicio')">
+      <img src="logo.png" alt="JL CODE Logo" class="w-10 h-10 object-contain drop-shadow-[0_0_12px_rgba(249,115,22,0.45)] group-hover:scale-105 transition-transform duration-300">
+      <span class="text-white font-black tracking-widest text-lg">JL <span class="text-orange-500">CODE</span></span>
     </div>
     <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-300">
       <a href="#inicio" onclick="showPage('inicio'); return false;" data-page="inicio" class="nav-link hover:text-red-400 transition-colors active-page">Inicio</a>
@@ -561,7 +563,7 @@ body {
     <div class="grid md:grid-cols-2 gap-10 items-center">
       <div>
         <h2 class="text-5xl md:text-6xl font-black uppercase tracking-tight mb-4">
-          <span class="text-white">JL</span> <span class="text-[#ff0000] red-glow">CODE</span>
+          <span class="text-white">JL</span> <span class="text-orange-500 red-glow">CODE</span>
         </h2>
         <p class="text-gray-300 text-sm md:text-base mb-8">JL CODE - LA TIENDA DE SCRIPTS QUE LLEVA TU SERVIDOR AL SIGUIENTE NIVEL</p>
         <div class="flex flex-col sm:flex-row gap-4">
@@ -596,10 +598,12 @@ body {
         </div>
       </div>
       <div class="flex justify-center items-center">
-        <div class="relative w-72 h-72 md:w-96 md:h-96 rounded-3xl p-1 bg-gradient-to-tr from-red-600 via-transparent to-red-600/30 flex items-center justify-center shadow-2xl shadow-red-950/80">
-          <div class="w-full h-full bg-[#0d0505] rounded-[22px] flex flex-col items-center justify-center p-8 text-center border border-red-900/30">
-            <i class="fas fa-terminal text-6xl text-red-600 mb-4 animate-pulse"></i>
-            <h3 class="text-2xl font-black text-white tracking-wide mb-2">SCRIPTS & RECURSOS</h3>
+        <div class="relative w-72 h-72 md:w-96 md:h-96 rounded-3xl p-1 bg-gradient-to-tr from-orange-500/80 via-transparent to-amber-500/30 flex items-center justify-center shadow-2xl shadow-orange-950/80">
+          <div class="w-full h-full bg-[#120b06]/90 backdrop-blur rounded-[22px] flex flex-col items-center justify-center p-8 text-center border border-orange-500/20 relative overflow-hidden group">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-amber-600/10 rounded-full blur-2xl pointer-events-none"></div>
+            <img src="logo.png" alt="JL CODE Logo" class="w-40 h-40 md:w-48 md:h-48 object-contain mb-3 drop-shadow-[0_0_25px_rgba(249,115,22,0.4)] group-hover:scale-105 transition-transform duration-500">
+            <h3 class="text-2xl font-black text-white tracking-wide mb-1">SCRIPTS & RECURSOS</h3>
             <p class="text-xs text-gray-400 leading-relaxed">Sistemas optimizados, código modular y soporte garantizado para tu comunidad.</p>
           </div>
         </div>
@@ -646,10 +650,10 @@ body {
   <!-- PÁGINA 3: INTERFAZ COMPLETA DEL CARRITO DE COMPRAS (RÉPLICA EXACTA) -->
   <section id="page-carrito" class="page max-w-6xl w-full mx-auto px-6 py-12">
     <!-- Header interno del carrito con botón Volver a la Tienda -->
-    <div class="flex items-center justify-between mb-10 pb-4 border-b border-red-950/40">
+    <div class="flex items-center justify-between mb-10 pb-4 border-b border-orange-950/40">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 to-red-950 flex items-center justify-center font-black text-white text-base shadow-lg border border-red-500">JL</div>
-        <span class="text-white font-black tracking-widest text-xl">JL <span class="text-red-500">CODE</span></span>
+        <img src="logo.png" alt="JL CODE Logo" class="w-10 h-10 object-contain drop-shadow-[0_0_12px_rgba(249,115,22,0.45)]">
+        <span class="text-white font-black tracking-widest text-xl">JL <span class="text-orange-500">CODE</span></span>
       </div>
       <button onclick="showPage('productos')" class="text-gray-400 hover:text-white transition-colors flex items-center gap-2 text-sm font-semibold cursor-pointer">
         <i class="fas fa-arrow-left text-xs"></i> Volver a la Tienda
@@ -709,12 +713,12 @@ body {
             </div>
             <div class="flex justify-between items-center">
               <span class="text-white font-black text-lg tracking-wide">Total</span>
-              <span id="cart-summary-total" class="text-3xl font-black text-[#ff0000] red-glow">$ 0.00</span>
+              <span id="cart-summary-total" class="text-3xl font-black text-orange-500 red-glow">$ 0.00</span>
             </div>
           </div>
 
-          <!-- Botón Comprar (Rojo Brillante Premium que manda a PayPal.me) -->
-          <button onclick="processPurchaseFromPage()" id="checkout-page-btn" class="w-full bg-[#ff0000] hover:bg-[#d60000] active:scale-[0.98] text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-[0_4px_25px_rgba(255,0,0,0.45)] hover:shadow-[0_6px_30px_rgba(255,0,0,0.65)] text-sm uppercase tracking-wider cursor-pointer mb-3">
+          <!-- Botón Comprar (Naranja Suave y Elegante) -->
+          <button onclick="processPurchaseFromPage()" id="checkout-page-btn" class="w-full bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 active:scale-[0.98] text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-[0_4px_25px_rgba(249,115,22,0.35)] hover:shadow-[0_6px_30px_rgba(249,115,22,0.55)] text-sm uppercase tracking-wider cursor-pointer mb-3">
             <i class="fas fa-shopping-bag text-base"></i> COMPRAR
           </button>
 
@@ -868,7 +872,7 @@ body {
       <div class="reviews-container">
         <div class="text-center mb-10">
           <h2 class="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">
-            TOP 3 DE LOS MEJORES <span style="color: rgb(255, 42, 0);">CLIENTES</span>
+            TOP 3 DE LOS MEJORES <span class="text-orange-500 red-glow">CLIENTES</span>
           </h2>
           <p class="text-gray-400 text-sm mt-2">Los que más han confiado en nosotros desde el primer día</p>
         </div>
@@ -2207,7 +2211,7 @@ class Particle {
     if (this.y > canvas.height) this.y = 0; if (this.y < 0) this.y = canvas.height;
   }
   draw() {
-    ctx.fillStyle = `rgba(255, 0, 0, ${this.opacity})`;
+    ctx.fillStyle = `rgba(249, 115, 22, ${this.opacity})`;
     ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
   }
 }
