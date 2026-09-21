@@ -2421,7 +2421,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(user => {
         if (user && user.username) {
           const cleanUser = user.username.toLowerCase().trim().replace(/#0+$/, '');
-          const isAdm = cleanUser === 'chinito_jl';
+          const isAdm = isAdminUser(user);
           const avatarUrl = user.avatar 
             ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`
             : getDiscordAvatar(user.username);
@@ -2458,8 +2458,6 @@ window.addEventListener('hashchange', () => {
     showPage(page);
   }
 });
-
-})();
 </script>
 </body>
 </html>
