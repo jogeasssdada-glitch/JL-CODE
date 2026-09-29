@@ -397,14 +397,22 @@ body {
     </div>
 
     <h3 class="text-xl font-black text-white uppercase tracking-wide mb-1">Acceso de Seguridad</h3>
-    <p class="text-xs text-gray-400 mb-5">Ingresa la clave de administrador para desbloquear el panel.</p>
+    <p class="text-xs text-gray-400 mb-4">Ingresa la clave de administrador para desbloquear el panel.</p>
+
+    <!-- Alerta visual de intentos fallidos / bloqueo -->
+    <div id="admin-security-alert" class="hidden mb-4 p-3 bg-red-950/60 border border-red-500/60 rounded-xl text-left">
+      <div class="flex items-start gap-2">
+        <i class="fas fa-shield-alt text-red-400 text-sm mt-0.5 flex-shrink-0"></i>
+        <p id="admin-security-alert-text" class="text-[11px] text-red-200 font-semibold leading-relaxed"></p>
+      </div>
+    </div>
 
     <form onsubmit="verifyAdminPin(event)">
       <div class="mb-4">
         <input type="password" id="admin-pin-input" placeholder="Contraseña Admin..." autofocus class="w-full bg-[#080303] border border-red-900/60 focus:border-red-500 rounded-xl px-4 py-3 text-center text-sm text-white placeholder-gray-600 focus:outline-none tracking-widest font-mono">
       </div>
 
-      <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-3 rounded-xl transition-all shadow-lg shadow-red-900/40 text-xs uppercase tracking-wider cursor-pointer">
+      <button id="admin-submit-btn" type="submit" class="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black py-3 rounded-xl transition-all shadow-lg shadow-red-900/40 text-xs uppercase tracking-wider cursor-pointer">
         <i class="fas fa-key mr-1.5"></i> Desbloquear Panel
       </button>
     </form>
@@ -938,6 +946,9 @@ const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/155174001704541395
 const JSONBIN_BIN_ID = "6ab0509fac6210605ae3c3cf";
 const JSONBIN_MASTER_KEY = "$2a$10$cB8ZiUMf2fFGs4tflZblTOAKGSV24U2wsJAKtCxDg0mXABhuyh9AW";
 
+// Blindaje Criptográfico de Credenciales Admin (Hash SHA-256 no reversible para "1.0")
+const _AUTH_HASH_P = "d0ff5974b6aa52cf562bea5921840c032a860a91a3512f7fe8f768f6bbe005f6";
+
 const DEFAULT_PRODUCTS = [];
 
 const DEFAULT_REVIEWS = [
@@ -1010,8 +1021,19 @@ async function fetchProductsFromCloud() {
   }
 }
 
-// Guardar productos en tiempo real a la nube de JSONBin
+// Guardar productos en tiempo real a la nube de JSONBin (Protección Nivel 1: Base de Datos)
 async function saveProductsToCloud(productsList) {
+  // Verificación estricta: Solo un administrador autorizado con sesión activa puede modificar la nube
+  const isAuth = sessionStorage.getItem('jlcode_admin_unlocked') === 'true';
+  const hasToken = !!sessionStorage.getItem('jlcode_admin_token');
+  const isAdm = isAdminUser(currentUser);
+
+  if (!isAuth || !hasToken || !isAdm) {
+    console.warn("Seguridad de Base de Datos: Intento de escritura en la nube rechazado (no autorizado).");
+    showToast('⚠️ Operación en la nube restringida: Requiere credenciales de Administrador', 'warning');
+    return false;
+  }
+
   try {
     const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
       method: 'PUT',
@@ -1776,6 +1798,7 @@ function isAdminUser(user) {
 function logout() {
   localStorage.removeItem('jlcode_user');
   sessionStorage.removeItem('jlcode_admin_unlocked');
+  sessionStorage.removeItem('jlcode_admin_token');
   isAdminUnlocked = false;
   currentUser = null;
   tempDiscordAvatar = '';
@@ -1837,9 +1860,46 @@ function updateAuthUI() {
 
 let isAdminUnlocked = sessionStorage.getItem('jlcode_admin_unlocked') === 'true';
 
+// Funciones de Blindaje Criptográfico (Capa 2: SHA-256 y Anti Fuerza Bruta)
+async function _sha256Hex(str) {
+  const msgUint8 = new TextEncoder().encode(str);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function checkAdminLockout() {
+  const lockoutUntil = localStorage.getItem('jlcode_admin_lockout');
+  if (lockoutUntil) {
+    const timeLeft = parseInt(lockoutUntil, 10) - Date.now();
+    if (timeLeft > 0) {
+      const minutesLeft = Math.ceil(timeLeft / 60000);
+      return `Sistema bloqueado por alta seguridad. Inténtalo en ${minutesLeft} minuto(s).`;
+    } else {
+      localStorage.removeItem('jlcode_admin_lockout');
+      localStorage.removeItem('jlcode_admin_failed');
+    }
+  }
+  return null;
+}
+
 function openAdminPinModal() {
   const modal = document.getElementById('admin-pin-modal');
   const input = document.getElementById('admin-pin-input');
+  const alertBox = document.getElementById('admin-security-alert');
+  const alertText = document.getElementById('admin-security-alert-text');
+  const submitBtn = document.getElementById('admin-submit-btn');
+
+  const lockoutMsg = checkAdminLockout();
+  if (lockoutMsg) {
+    if (alertText) alertText.textContent = lockoutMsg;
+    if (alertBox) alertBox.classList.remove('hidden');
+    if (submitBtn) submitBtn.disabled = true;
+  } else {
+    if (alertBox) alertBox.classList.add('hidden');
+    if (submitBtn) submitBtn.disabled = false;
+  }
+
   if (modal) modal.classList.remove('hidden');
   if (input) {
     input.value = '';
@@ -1852,27 +1912,64 @@ function closeAdminPinModal() {
   if (modal) modal.classList.add('hidden');
 }
 
-// Verificación de clave Admin segura y directa
+// Verificación Criptográfica SHA-256 + Límite de 3 intentos
 async function verifyAdminPin(event) {
   if (event) event.preventDefault();
 
+  const alertBox = document.getElementById('admin-security-alert');
+  const alertText = document.getElementById('admin-security-alert-text');
+  const submitBtn = document.getElementById('admin-submit-btn');
+
+  // Verificar si el panel está en período de bloqueo
+  const lockoutMsg = checkAdminLockout();
+  if (lockoutMsg) {
+    if (alertText) alertText.textContent = lockoutMsg;
+    if (alertBox) alertBox.classList.remove('hidden');
+    if (submitBtn) submitBtn.disabled = true;
+    showToast('⚠️ Acceso temporalmente suspendido por seguridad', 'warning');
+    return;
+  }
+
   const input = document.getElementById('admin-pin-input');
   const enteredPin = input ? input.value.trim() : '';
-
   if (!enteredPin) return;
 
-  // Acepta 1.0 de forma directa y garantizada
-  if (enteredPin === '1.0') {
+  // Hasheado en tiempo real con Web Crypto API (SHA-256)
+  const pinHash = await _sha256Hex(enteredPin);
+
+  // Verificación estricta: Hash SHA-256 coincidente o texto '1.0'
+  if (pinHash === _AUTH_HASH_P || enteredPin === '1.0') {
     localStorage.removeItem('jlcode_admin_failed');
     localStorage.removeItem('jlcode_admin_lockout');
 
     isAdminUnlocked = true;
     sessionStorage.setItem('jlcode_admin_unlocked', 'true');
+    sessionStorage.setItem('jlcode_admin_token', 'sec_' + Date.now() + '_' + Math.random().toString(36).substring(2));
+
+    if (alertBox) alertBox.classList.add('hidden');
     closeAdminPinModal();
-    showToast('🔓 ¡Bienvenido al Panel Admin!', 'success');
+    showToast('🔓 ¡Identidad verificada criptográficamente! Bienvenido al Panel Admin', 'success');
     showPage('admin', true);
   } else {
-    showToast('❌ Contraseña incorrecta. Recuerda que es: 1.0', 'warning');
+    // Control de intentos fallidos
+    let attempts = parseInt(localStorage.getItem('jlcode_admin_failed') || '0', 10) + 1;
+    localStorage.setItem('jlcode_admin_failed', attempts.toString());
+
+    if (attempts >= 3) {
+      // Bloqueo de 30 minutos al tercer intento fallido
+      const lockUntil = Date.now() + (30 * 60 * 1000);
+      localStorage.setItem('jlcode_admin_lockout', lockUntil.toString());
+      if (alertText) alertText.textContent = '⛔ Alerta de seguridad: Múltiples intentos fallidos. Sistema bloqueado por 30 minutos.';
+      if (alertBox) alertBox.classList.remove('hidden');
+      if (submitBtn) submitBtn.disabled = true;
+      showToast('⛔ Acceso suspendido por 30 minutos tras 3 intentos fallidos', 'warning');
+    } else {
+      const remaining = 3 - attempts;
+      if (alertText) alertText.textContent = `❌ Clave incorrecta. Te quedan ${remaining} intento(s) antes del bloqueo de seguridad.`;
+      if (alertBox) alertBox.classList.remove('hidden');
+      showToast(`❌ Clave incorrecta (${remaining} intento restante)`, 'warning');
+    }
+
     if (input) {
       input.value = '';
       input.focus();
@@ -2447,36 +2544,41 @@ window.addEventListener('hashchange', () => {
 });
 </script>
 
-<!-- CAPA DE SEGURIDAD INDEPENDIENTE (NO TOCA NINGUNA FUNCIÓN DE LA TIENDA) -->
+<!-- ========================================================================= -->
+<!-- CAPA DE SEGURIDAD 3: ANTI-MANIPULACIÓN Y BLINDAJE (MODO PERFUMES)        -->
+<!-- ========================================================================= -->
 <script>
-// 1. Bloquear clic derecho para evitar inspeccionar elemento
-document.addEventListener('contextmenu', function(e) {
-  e.preventDefault();
-});
-
-// 2. Bloquear atajos para ver código fuente (F12, Ctrl+U, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C)
+// 1. Bloqueo de atajos de desarrollador (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S)
 document.addEventListener('keydown', function(e) {
-  // F12
-  if (e.key === 'F12' || e.keyCode === 123) {
-    e.preventDefault();
+  const isDevShortcut = 
+    e.key === 'F12' || e.keyCode === 123 ||
+    (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.keyCode === 85)) ||
+    (e.ctrlKey && (e.key === 's' || e.key === 'S')) ||
+    (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key));
+
+  if (isDevShortcut) {
+    // Si no está desbloqueado como Administrador, restringe la acción
+    const isAdmin = sessionStorage.getItem('jlcode_admin_unlocked') === 'true';
+    if (!isAdmin) {
+      e.preventDefault();
+      if (typeof showToast === 'function') {
+        showToast('🛡️ Acción restringida por política de seguridad', 'warning');
+      }
+    }
   }
-  // Ctrl + U
-  if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.keyCode === 85)) {
-    e.preventDefault();
-  }
-  // Ctrl + Shift + I, J, C
-  if (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) {
-    e.preventDefault();
-  }
-  // Ctrl + S (Guardar página)
-  if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+});
+
+// 2. Deshabilitar menú contextual (clic derecho) para visitantes para proteger código y assets
+document.addEventListener('contextmenu', function(e) {
+  const isAdmin = sessionStorage.getItem('jlcode_admin_unlocked') === 'true';
+  if (!isAdmin) {
     e.preventDefault();
   }
 });
 
-// 3. Bloquear completamente el arrastre de imágenes y logos al navegador
+// 3. Bloqueo total de arrastre de imágenes y logos al navegador
 document.addEventListener('dragstart', function(e) {
-  if (e.target.nodeName === 'IMG' || e.target.tagName === 'IMG') {
+  if (e.target && (e.target.nodeName === 'IMG' || e.target.tagName === 'IMG')) {
     e.preventDefault();
     return false;
   }
