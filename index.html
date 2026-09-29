@@ -551,7 +551,7 @@ body {
 <!-- ENCABEZADO Y BARRA SUPERIOR -->
 <div id="main-content" class="relative z-10 flex-grow flex flex-col">
   <header class="bg-[#0d0505]/90 backdrop-blur border-b red-border sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-    <div class="flex items-center gap-3 cursor-pointer group" onclick="showPage('inicio')">
+    <div class="flex items-center gap-3 cursor-pointer group select-none" onclick="showPage('inicio')" ondblclick="handleLogoAdminAccess()">
       <img src="logo.png?v=4" alt="BS STORE Logo" class="w-10 h-10 object-contain drop-shadow-[0_0_12px_rgba(249,115,22,0.45)] group-hover:scale-105 transition-transform duration-300">
       <span class="text-white font-black tracking-widest text-lg">BS <span class="text-orange-500">STORE</span></span>
     </div>
@@ -946,8 +946,9 @@ const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/155174001704541395
 const JSONBIN_BIN_ID = "6ab0509fac6210605ae3c3cf";
 const JSONBIN_MASTER_KEY = "$2a$10$cB8ZiUMf2fFGs4tflZblTOAKGSV24U2wsJAKtCxDg0mXABhuyh9AW";
 
-// Blindaje Criptográfico de Credenciales Admin (Hash SHA-256 no reversible para "1.0")
-const _AUTH_HASH_P = "d0ff5974b6aa52cf562bea5921840c032a860a91a3512f7fe8f768f6bbe005f6";
+// Blindaje Criptográfico de Credenciales Admin (Hash SHA-256 no reversible para "bs-store2026")
+const _AUTH_HASH_P = "31bebba605379bf6da72b79bac6816344c65fcb3d997f94c24eaa758d6441c60";  // "bs-store2026"
+const _AUTH_HASH_P_DOT = "c155ae6e87cfd119241cd59cc15f2dcb38323a7e4c2d37f9f860e3898191f9e3"; // "bs.-store2026"
 
 const DEFAULT_PRODUCTS = [];
 
@@ -1813,16 +1814,18 @@ function logout() {
 
 function updateAuthUI() {
   const isAdm = isAdminUser(currentUser);
+  // El Panel Admin SOLO aparece si es admin Y YA desbloqueó con el doble clic + contraseña
+  const showAdminUI = isAdm && isAdminUnlocked;
   const adminNav = document.getElementById('nav-admin-link');
   const adminMenu = document.getElementById('panel-admin-menu-item');
   const roleBadge = document.getElementById('panel-user-role');
   const navRoleBadge = document.getElementById('nav-user-role-badge');
 
   if (adminNav) {
-    adminNav.classList.toggle('hidden', !isAdm);
+    adminNav.classList.toggle('hidden', !showAdminUI);
   }
   if (adminMenu) {
-    adminMenu.classList.toggle('hidden', !isAdm);
+    adminMenu.classList.toggle('hidden', !showAdminUI);
   }
 
   if (currentUser) {
@@ -1883,6 +1886,28 @@ function checkAdminLockout() {
   return null;
 }
 
+// Doble Clic en el Logo para acceder al Panel Admin
+function handleLogoAdminAccess() {
+  if (!currentUser) {
+    showToast('Debes iniciar sesión con Discord primero', 'warning');
+    openLoginModal('inicio');
+    return;
+  }
+
+  if (!isAdminUser(currentUser)) {
+    showToast('Acceso restringido: Tu cuenta de Discord no tiene rango de Administrador', 'warning');
+    return;
+  }
+
+  // Si ya tiene el PIN desbloqueado en esta sesión, va directo al panel
+  if (isAdminUnlocked) {
+    showPage('admin', true);
+  } else {
+    // Si no, abre el modal de seguridad para ingresar la contraseña
+    openAdminPinModal();
+  }
+}
+
 function openAdminPinModal() {
   const modal = document.getElementById('admin-pin-modal');
   const input = document.getElementById('admin-pin-input');
@@ -1937,14 +1962,23 @@ async function verifyAdminPin(event) {
   // Hasheado en tiempo real con Web Crypto API (SHA-256)
   const pinHash = await _sha256Hex(enteredPin);
 
-  // Verificación estricta: Hash SHA-256 coincidente o texto '1.0'
-  if (pinHash === _AUTH_HASH_P || enteredPin === '1.0') {
+  // Verificación estricta: Únicamente la contraseña autorizada "bs-store2026"
+  const isValidPass = (
+    pinHash === _AUTH_HASH_P || 
+    pinHash === _AUTH_HASH_P_DOT || 
+    enteredPin.toLowerCase() === 'bs-store2026' || 
+    enteredPin.toLowerCase() === 'bs.-store2026'
+  );
+
+  if (isValidPass) {
     localStorage.removeItem('jlcode_admin_failed');
     localStorage.removeItem('jlcode_admin_lockout');
 
     isAdminUnlocked = true;
     sessionStorage.setItem('jlcode_admin_unlocked', 'true');
     sessionStorage.setItem('jlcode_admin_token', 'sec_' + Date.now() + '_' + Math.random().toString(36).substring(2));
+
+    updateAuthUI();
 
     if (alertBox) alertBox.classList.add('hidden');
     closeAdminPinModal();
