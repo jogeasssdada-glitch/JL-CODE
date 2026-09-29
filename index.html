@@ -64,6 +64,22 @@ img {
   -ms-user-select: none !important;
   pointer-events: auto;
 }
+/* Bloquear selección de texto accidental para evitar extracción de código */
+.no-copy, body {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+/* Permitir escribir en inputs y textareas */
+input, textarea {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   background-color: #0b0704;
@@ -2579,38 +2595,58 @@ window.addEventListener('hashchange', () => {
 </script>
 
 <!-- ========================================================================= -->
-<!-- CAPA DE SEGURIDAD 3: ANTI-MANIPULACIÓN Y BLINDAJE (MODO PERFUMES)        -->
+<!-- CAPA DE SEGURIDAD 3: BLINDAJE TOTAL CONTRA INSPECCIÓN Y CÓDIGO FUENTE    -->
 <!-- ========================================================================= -->
 <script>
-// 1. Bloqueo de atajos de desarrollador (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S)
+// 1. Bloqueo de atajos para ver código fuente e inspeccionar
 document.addEventListener('keydown', function(e) {
-  const isDevShortcut = 
-    e.key === 'F12' || e.keyCode === 123 ||
-    (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.keyCode === 85)) ||
-    (e.ctrlKey && (e.key === 's' || e.key === 'S')) ||
-    (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key));
+  const isAdmin = sessionStorage.getItem('jlcode_admin_unlocked') === 'true';
+  if (isAdmin) return; // El administrador autenticado tiene acceso completo
 
-  if (isDevShortcut) {
-    // Si no está desbloqueado como Administrador, restringe la acción
-    const isAdmin = sessionStorage.getItem('jlcode_admin_unlocked') === 'true';
-    if (!isAdmin) {
-      e.preventDefault();
-      if (typeof showToast === 'function') {
-        showToast('🛡️ Acción restringida por política de seguridad', 'warning');
-      }
+  const key = (e.key || '').toLowerCase();
+  const code = e.keyCode || e.which;
+
+  // F12 (Consola / DevTools)
+  const isF12 = e.key === 'F12' || code === 123;
+  // Ctrl + U / Cmd + Opt + U (Ver Código Fuente)
+  const isViewSource = (e.ctrlKey || e.metaKey) && (key === 'u' || code === 85);
+  // Ctrl + Shift + I/J/C (Herramientas de Desarrollador)
+  const isDevTools = (e.ctrlKey || e.metaKey) && e.shiftKey && ['i', 'j', 'c'].includes(key);
+  // Ctrl + S (Guardar página completa)
+  const isSavePage = (e.ctrlKey || e.metaKey) && (key === 's' || code === 83);
+  // Ctrl + P (Imprimir / Exportar DOM)
+  const isPrint = (e.ctrlKey || e.metaKey) && (key === 'p' || code === 80);
+
+  if (isF12 || isViewSource || isDevTools || isSavePage || isPrint) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (typeof showToast === 'function') {
+      showToast('🛡️ Acción bloqueada: El código fuente está protegido', 'warning');
     }
+    return false;
   }
-});
+}, true);
 
-// 2. Deshabilitar menú contextual (clic derecho) para visitantes para proteger código y assets
+// 2. Deshabilitar menú contextual (Clic derecho) para visitantes
 document.addEventListener('contextmenu', function(e) {
   const isAdmin = sessionStorage.getItem('jlcode_admin_unlocked') === 'true';
   if (!isAdmin) {
     e.preventDefault();
+    return false;
+  }
+}, true);
+
+// 3. Bloquear copia masiva fuera de campos de texto
+document.addEventListener('copy', function(e) {
+  const isAdmin = sessionStorage.getItem('jlcode_admin_unlocked') === 'true';
+  const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
+  if (!isAdmin && tag !== 'INPUT' && tag !== 'TEXTAREA') {
+    e.preventDefault();
+    return false;
   }
 });
 
-// 3. Bloqueo total de arrastre de imágenes y logos al navegador
+// 4. Bloqueo total de arrastre de imágenes y logos al navegador
 document.addEventListener('dragstart', function(e) {
   if (e.target && (e.target.nodeName === 'IMG' || e.target.tagName === 'IMG')) {
     e.preventDefault();
