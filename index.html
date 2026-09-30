@@ -1024,13 +1024,34 @@ async function fetchProductsFromCloud() {
     if (res.ok) {
       const data = await res.json();
       if (data && data.record && Array.isArray(data.record.products)) {
-        allProducts = data.record.products;
-        localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
-        buildCategories();
-        renderProducts();
-        renderAdminProductsList();
-        renderMisProductos();
-        updateLiveStats();
+        const cloudProducts = data.record.products;
+        const localCustom = JSON.parse(localStorage.getItem('jlcode_custom_products') || '[]');
+
+        // Si tenemos productos locales que no están en la nube (ej: recién creados antes de sincronizar),
+        // fusionarlos para nunca perderlos
+        const mergedMap = new Map();
+        // Primero agregar los de la nube
+        cloudProducts.forEach(p => { if (p && p.id) mergedMap.set(p.id, p); });
+        // Luego asegurar que ningún producto local reciente se pierda
+        localCustom.forEach(p => { if (p && p.id && !mergedMap.has(p.id)) mergedMap.set(p.id, p); });
+
+        const finalProducts = Array.from(mergedMap.values());
+        
+        // Si el resultado tiene productos, actualizar
+        if (finalProducts.length > 0) {
+          allProducts = finalProducts;
+          localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
+          buildCategories();
+          renderProducts();
+          renderAdminProductsList();
+          renderMisProductos();
+          updateLiveStats();
+
+          // Si había productos locales que faltaban en la nube y somos admin, sincronizarlos
+          if (cloudProducts.length < finalProducts.length && isAdminUnlocked && isAdminUser(currentUser)) {
+            saveProductsToCloud(finalProducts);
+          }
+        }
       }
     }
   } catch (err) {
@@ -1040,12 +1061,11 @@ async function fetchProductsFromCloud() {
 
 // Guardar productos en tiempo real a la nube de JSONBin (Protección Nivel 1: Base de Datos)
 async function saveProductsToCloud(productsList) {
-  // Verificación estricta: Solo un administrador autorizado con sesión activa puede modificar la nube
-  const isAuth = sessionStorage.getItem('jlcode_admin_unlocked') === 'true';
-  const hasToken = !!sessionStorage.getItem('jlcode_admin_token');
+  // Verificación: Solo un administrador autorizado puede modificar la nube
+  const isUnlocked = isAdminUnlocked || (sessionStorage.getItem('jlcode_admin_unlocked') === 'true');
   const isAdm = isAdminUser(currentUser);
 
-  if (!isAuth || !hasToken || !isAdm) {
+  if (!isUnlocked || !isAdm) {
     console.warn("Seguridad de Base de Datos: Intento de escritura en la nube rechazado (no autorizado).");
     showToast('⚠️ Operación en la nube restringida: Requiere credenciales de Administrador', 'warning');
     return false;
@@ -2109,7 +2129,7 @@ function handleAdminFileUpload(event) {
   reader.readAsDataURL(file);
 }
 
-function adminSaveProduct(event) {
+async function adminSaveProduct(event) {
   event.preventDefault();
   if (!isAdminUser(currentUser)) {
     showToast('No tienes permisos de Administrador', 'warning');
@@ -2145,7 +2165,9 @@ function adminSaveProduct(event) {
 
   allProducts.unshift(newProduct);
   localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
-  saveProductsToCloud(allProducts);
+  
+  // Guardar en la nube y notificar
+  await saveProductsToCloud(allProducts);
 
   // Reset form
   document.getElementById('admin-add-product-form').reset();
@@ -2154,8 +2176,10 @@ function adminSaveProduct(event) {
   adminUploadedFileName = '';
   document.getElementById('adm-p-license-prefix').value = 'JL';
 
+  buildCategories();
   renderProducts();
   renderAdminProductsList();
+  renderMisProductos();
   updateLiveStats();
   showToast('¡Recurso publicado con éxito en la tienda!', 'success');
 }
@@ -2196,12 +2220,12 @@ function renderAdminProductsList() {
   `).join('');
 }
 
-function adminDeleteProduct(id) {
+async function adminDeleteProduct(id) {
   if (!isAdminUser(currentUser)) return;
   if (!confirm('¿Estás seguro de eliminar este recurso de la tienda?')) return;
   allProducts = allProducts.filter(p => p.id !== id);
   localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
-  saveProductsToCloud(allProducts);
+  await saveProductsToCloud(allProducts);
 
   // Limpiar del carrito del usuario si lo tenía añadido
   const cartKey = getUserCartKey();
@@ -2221,12 +2245,12 @@ function adminDeleteProduct(id) {
   showToast('Recurso eliminado correctamente', 'warning');
 }
 
-function adminClearAllProducts() {
+async function adminClearAllProducts() {
   if (!isAdminUser(currentUser)) return;
   if (!confirm('¿Estás seguro de que quieres borrar TODOS los recursos de la tienda?')) return;
   allProducts = [];
   localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
-  saveProductsToCloud(allProducts);
+  await saveProductsToCloud(allProducts);
 
   // Limpiar carritos
   const cartKey = getUserCartKey();
