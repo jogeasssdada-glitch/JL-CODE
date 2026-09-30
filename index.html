@@ -959,7 +959,7 @@ body {
 <script>
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1551740017045413953/bVqc9ZwI6bgF51W0ctqbuvUWcpod5iNmuOr5U0cxWRMPQuKAW7tn3e3BC5ORkd1Q0JCv";
 
-const JSONBIN_BIN_ID = "6ab0509fac6210605ae3c3cf";
+const JSONBIN_BIN_ID = "6abc9cc7ac6210605a0434cf";
 const JSONBIN_MASTER_KEY = "$2a$10$cB8ZiUMf2fFGs4tflZblTOAKGSV24U2wsJAKtCxDg0mXABhuyh9AW";
 
 // Blindaje Criptográfico de Credenciales Admin (Hash SHA-256 no reversible para "bs-store2026")
@@ -1013,7 +1013,7 @@ let allProducts = (() => {
   return DEFAULT_PRODUCTS;
 })();
 
-// Cargar productos en tiempo real desde la nube de JSONBin
+// Cargar productos en tiempo real desde la nube de JSONBin (Acceso público global)
 async function fetchProductsFromCloud() {
   try {
     const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
@@ -1027,17 +1027,13 @@ async function fetchProductsFromCloud() {
         const cloudProducts = data.record.products;
         const localCustom = JSON.parse(localStorage.getItem('jlcode_custom_products') || '[]');
 
-        // Si tenemos productos locales que no están en la nube (ej: recién creados antes de sincronizar),
-        // fusionarlos para nunca perderlos
+        // Sincronización inteligente sin duplicar
         const mergedMap = new Map();
-        // Primero agregar los de la nube
         cloudProducts.forEach(p => { if (p && p.id) mergedMap.set(p.id, p); });
-        // Luego asegurar que ningún producto local reciente se pierda
         localCustom.forEach(p => { if (p && p.id && !mergedMap.has(p.id)) mergedMap.set(p.id, p); });
 
         const finalProducts = Array.from(mergedMap.values());
         
-        // Si la nube tiene productos, actualizar el catálogo
         if (cloudProducts.length > 0) {
           allProducts = finalProducts.length > 0 ? finalProducts : cloudProducts;
           localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
@@ -1047,12 +1043,11 @@ async function fetchProductsFromCloud() {
           renderMisProductos();
           updateLiveStats();
 
-          // Si había productos locales nuevos pendientes por subir, sincronizarlos
+          // Si el admin tiene productos locales que aún no estaban en la nube, subirlos
           if (cloudProducts.length < finalProducts.length && isAdminUnlocked && isAdminUser(currentUser)) {
             saveProductsToCloud(finalProducts);
           }
         } else if (finalProducts.length > 0) {
-          // Si la nube estaba vacía pero tenemos productos locales, mantenerlos y subirlos si somos admin
           allProducts = finalProducts;
           renderProducts();
           renderAdminProductsList();
@@ -1065,13 +1060,12 @@ async function fetchProductsFromCloud() {
       }
     }
   } catch (err) {
-    console.warn("No se pudo sincronizar con la nube JSONBin:", err);
+    console.warn("Sincronización en la nube en espera:", err);
   }
 }
 
-// Guardar productos en tiempo real a la nube de JSONBin (Protección Nivel 1: Base de Datos)
+// Guardar productos en tiempo real a la nube de JSONBin (Exclusivo Administrador)
 async function saveProductsToCloud(productsList) {
-  // Verificación: Solo un administrador autorizado puede modificar la nube
   const isUnlocked = isAdminUnlocked || (sessionStorage.getItem('jlcode_admin_unlocked') === 'true');
   const isAdm = isAdminUser(currentUser);
 
@@ -1093,10 +1087,14 @@ async function saveProductsToCloud(productsList) {
     if (res.ok) {
       showToast('☁️ Catálogo sincronizado en la nube para todo el mundo', 'success');
       return true;
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      console.error("Error al actualizar bin en JSONBin:", res.status, errData);
+      showToast('Aviso: Guardado localmente, error en la nube (' + res.status + ')', 'warning');
     }
   } catch (err) {
     console.error("Error al guardar en JSONBin:", err);
-    showToast('Aviso: Guardado localmente, error temporal en la nube', 'warning');
+    showToast('Aviso: Guardado localmente, reconectando...', 'warning');
   }
   return false;
 }
