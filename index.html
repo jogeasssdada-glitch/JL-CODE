@@ -1025,38 +1025,17 @@ async function fetchProductsFromCloud() {
       const data = await res.json();
       if (data && data.record && Array.isArray(data.record.products)) {
         const cloudProducts = data.record.products;
-        const localCustom = JSON.parse(localStorage.getItem('jlcode_custom_products') || '[]');
-
-        // Sincronización inteligente sin duplicar
-        const mergedMap = new Map();
-        cloudProducts.forEach(p => { if (p && p.id) mergedMap.set(p.id, p); });
-        localCustom.forEach(p => { if (p && p.id && !mergedMap.has(p.id)) mergedMap.set(p.id, p); });
-
-        const finalProducts = Array.from(mergedMap.values());
         
-        if (cloudProducts.length > 0) {
-          allProducts = finalProducts.length > 0 ? finalProducts : cloudProducts;
-          localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
-          buildCategories();
-          renderProducts();
-          renderAdminProductsList();
-          renderMisProductos();
-          updateLiveStats();
-
-          // Si el admin tiene productos locales que aún no estaban en la nube, subirlos
-          if (cloudProducts.length < finalProducts.length && isAdminUnlocked && isAdminUser(currentUser)) {
-            saveProductsToCloud(finalProducts);
-          }
-        } else if (finalProducts.length > 0) {
-          allProducts = finalProducts;
-          renderProducts();
-          renderAdminProductsList();
-          renderMisProductos();
-          updateLiveStats();
-          if (isAdminUnlocked && isAdminUser(currentUser)) {
-            saveProductsToCloud(finalProducts);
-          }
-        }
+        // La nube es la fuente de verdad definitiva:
+        // Si un admin borra un producto en la nube, se borra para todos los visitantes automáticamente
+        allProducts = cloudProducts;
+        localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
+        
+        buildCategories();
+        renderProducts();
+        renderAdminProductsList();
+        renderMisProductos();
+        updateLiveStats();
       }
     }
   } catch (err) {
