@@ -1037,9 +1037,9 @@ async function fetchProductsFromCloud() {
 
         const finalProducts = Array.from(mergedMap.values());
         
-        // Si el resultado tiene productos, actualizar
-        if (finalProducts.length > 0) {
-          allProducts = finalProducts;
+        // Si la nube tiene productos, actualizar el catálogo
+        if (cloudProducts.length > 0) {
+          allProducts = finalProducts.length > 0 ? finalProducts : cloudProducts;
           localStorage.setItem('jlcode_custom_products', JSON.stringify(allProducts));
           buildCategories();
           renderProducts();
@@ -1047,8 +1047,18 @@ async function fetchProductsFromCloud() {
           renderMisProductos();
           updateLiveStats();
 
-          // Si había productos locales que faltaban en la nube y somos admin, sincronizarlos
+          // Si había productos locales nuevos pendientes por subir, sincronizarlos
           if (cloudProducts.length < finalProducts.length && isAdminUnlocked && isAdminUser(currentUser)) {
+            saveProductsToCloud(finalProducts);
+          }
+        } else if (finalProducts.length > 0) {
+          // Si la nube estaba vacía pero tenemos productos locales, mantenerlos y subirlos si somos admin
+          allProducts = finalProducts;
+          renderProducts();
+          renderAdminProductsList();
+          renderMisProductos();
+          updateLiveStats();
+          if (isAdminUnlocked && isAdminUser(currentUser)) {
             saveProductsToCloud(finalProducts);
           }
         }
